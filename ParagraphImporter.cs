@@ -117,6 +117,7 @@ namespace FFAWMT.Services
             }
             Logger.Log($"Paragraph import complete. {totalImported} article(s) processed.");
         }
+
         public static List<int> ImportAll()
         {
             List<int> updatedArticleIds = new List<int>();
@@ -135,6 +136,115 @@ namespace FFAWMT.Services
             }
 
             return updatedArticleIds;
+        }
+        private static List<Article> GetArticlesToProcess()
+        {
+            var articles = new List<Article>();
+
+            using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
+            connection.Open();
+
+            var cmd = new SqlCommand("SELECT Article_ID, Article_Name FROM Articles WHERE Active = 1", connection);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                articles.Add(new Article
+                {
+                    Id = reader.GetInt32(0),
+                    Title = reader.GetString(1)
+                });
+            }
+
+            return articles;
+        }
+
+        private static bool ImportHtmlParagraphs(int articleId, SqlConnection connection)
+        {
+            var selectCmd = new SqlCommand(@"
+        SELECT Content_ID, Post_Content 
+        FROM Articles_Contents 
+        WHERE Article_ID = @ArticleID", connection);
+            selectCmd.Parameters.AddWithValue("@ArticleID", articleId);
+
+            int contentId = 0;
+            string html = "";
+
+            using (var reader = selectCmd.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    contentId = reader.GetInt32(0);
+                    html = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                }
+                else
+                {
+                    Logger.Log($"❌ Could not find content for Article_ID {articleId}");
+                    return false;
+                }
+            }
+
+            var paragraphs = ExtractParagraphs(html);
+
+            var insertTranslation = new SqlCommand(@"
+        INSERT INTO Articles_Translations (Content_ID, Language_ID)
+        OUTPUT INSERTED.Translation_ID
+        VALUES (@ContentID, 1)", connection);
+            insertTranslation.Parameters.AddWithValue("@ContentID", contentId);
+
+            int translationId = (int)insertTranslation.ExecuteScalar();
+
+            int paragraphNumber = 1;
+            foreach (var para in paragraphs)
+            {
+                string trimmedText = para.TextOnly.Trim();
+                int typeId = para.TypeID;
+
+                if (Regex.IsMatch(trimmedText, "^[\"\'‘’“”]"))
+                    typeId = GetTypeIdByName("Quote");
+
+                var insertParagraph = new SqlCommand(@"
+            INSERT INTO Articles_Paragraphs
+            (Translation_ID, Paragraph_Number, Content_Type_ID, Paragraph_Raw)
+            VALUES (@TID, @Num, @TypeID, @Raw)", connection);
+
+                insertParagraph.Parameters.AddWithValue("@TID", translationId);
+                insertParagraph.Parameters.AddWithValue("@Num", paragraphNumber++);
+                insertParagraph.Parameters.AddWithValue("@TypeID", typeId);
+                insertParagraph.Parameters.AddWithValue("@Raw", para.Raw);
+
+                insertParagraph.ExecuteNonQuery();
+            }
+
+            return true;
+        }
+
+        private static bool ImportArticle(Article article)
+        {
+            using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
+            connection.Open();
+
+            var cmd = new SqlCommand(@"
+        SELECT COUNT(*) 
+        FROM Articles_Translations t
+        JOIN Articles_Contents c ON t.Content_ID = c.Content_ID
+        WHERE c.Article_ID = @ArticleID AND t.Language_ID = 1", connection);
+            cmd.Parameters.AddWithValue("@ArticleID", article.Id);
+
+            int count = (int)cmd.ExecuteScalar();
+            if (count > 0)
+                return false;
+
+            Logger.Log($"Importing article: {article.Id} - {article.Title}");
+
+            // 🧠 Only return true if actual import succeeded
+            return ImportHtmlParagraphs(article.Id, connection);
+        }
+
+
+        private class Article
+        {
+            public int Id { get; set; }
+            public string Title { get; set; }
         }
 
         public static void UpdateTranslatedTitles(SqlConnection connection)
@@ -175,6 +285,27 @@ namespace FFAWMT.Services
 
             int updated = cmd.ExecuteNonQuery();
             Logger.Log($"✔️ Updated paragraph counts for {updated} English translations.");
+        }
+
+        public static void UpdateSeparatorParagraphs()
+        {
+            using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
+            connection.Open();
+            UpdateSeparatorLines(connection);
+        }
+
+        public static void UpdateParagraphCounts()
+        {
+            using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
+            connection.Open();
+            UpdateParagraphCounts(connection);
+        }
+
+        public static void UpdateTranslatedTitles()
+        {
+            using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
+            connection.Open();
+            UpdateTranslatedTitles(connection);
         }
 
         public static void UpdateSeparatorLines(SqlConnection connection)
