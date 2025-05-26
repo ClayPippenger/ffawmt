@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Threading.Tasks;
 using FFAWMT.Services;
+using System.Collections.Generic;
 
 namespace FFAWMT
 {
@@ -72,17 +73,35 @@ namespace FFAWMT
 
         private void btnImportParagraphs_Click(object sender, EventArgs e)
         {
-            try
+            Logger.Log("[Action] Importing article paragraphs...");
+            Logger.Log("Starting paragraph import process...");
+
+            List<int> updatedArticleIds = ParagraphImporter.ImportAll();
+
+            if (updatedArticleIds.Count > 0)
             {
-                Logger.Log("[Action] Importing article paragraphs...");
-                ParagraphImporter.Run();
-                Logger.Log("[Done] Paragraph import complete.");
+                Logger.Log($"✔️ Paragraphs updated for {updatedArticleIds.Count} article(s).");
+
+                Logger.Log("Updating separator paragraph numbers (~~~)...");
+                ParagraphImporter.UpdateSeparatorParagraphs();
+                Logger.Log("✔️ Updated separator lines.");
+
+                Logger.Log("Updating paragraph counts...");
+                ParagraphImporter.UpdateParagraphCounts();
+                Logger.Log("✔️ Updated paragraph counts.");
+
+                Logger.Log("Updating translated titles...");
+                ParagraphImporter.UpdateTranslatedTitles();
+                Logger.Log("✔️ Updated translated titles.");
             }
-            catch (Exception ex)
+            else
             {
-                Logger.Log("[ERROR] " + ex.Message);
+                Logger.Log("No articles needed re-importing. Skipping post-import updates.");
             }
+
+            Logger.Log("[Done] Paragraph import complete.");
         }
+
 
         private void btnCleanParagraphs_Click(object sender, EventArgs e)
         {

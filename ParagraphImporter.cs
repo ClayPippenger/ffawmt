@@ -117,8 +117,27 @@ namespace FFAWMT.Services
             }
             Logger.Log($"Paragraph import complete. {totalImported} article(s) processed.");
         }
+        public static List<int> ImportAll()
+        {
+            List<int> updatedArticleIds = new List<int>();
 
-        private static void UpdateTranslatedTitles(SqlConnection connection)
+            // Retrieve articles that need to be imported or updated
+            var articlesToProcess = GetArticlesToProcess(); // Implement this method based on your logic
+
+            foreach (var article in articlesToProcess)
+            {
+                bool isUpdated = ImportArticle(article); // Implement this method to handle the import logic
+
+                if (isUpdated)
+                {
+                    updatedArticleIds.Add(article.Id);
+                }
+            }
+
+            return updatedArticleIds;
+        }
+
+        public static void UpdateTranslatedTitles(SqlConnection connection)
         {
             Logger.Log("Updating translated titles...");
 
@@ -136,7 +155,7 @@ namespace FFAWMT.Services
             Logger.Log($"✔️ Updated translated titles for {updated} English translations.");
         }
 
-        private static void UpdateParagraphCounts(SqlConnection connection)
+        public static void UpdateParagraphCounts(SqlConnection connection)
         {
             Logger.Log("Updating paragraph counts...");
 
@@ -158,7 +177,7 @@ namespace FFAWMT.Services
             Logger.Log($"✔️ Updated paragraph counts for {updated} English translations.");
         }
 
-        private static void UpdateSeparatorLines(SqlConnection connection)
+        public static void UpdateSeparatorLines(SqlConnection connection)
         {
             Logger.Log("Updating separator paragraph numbers (~~~)...");
 
