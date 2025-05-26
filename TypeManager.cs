@@ -17,7 +17,7 @@ namespace FFAWMT.Services
             cmd.Parameters.AddWithValue("@TypeName", typeName);
 
             int rows = cmd.ExecuteNonQuery();
-            Console.WriteLine(rows > 0
+            Logger.Log(rows > 0
                 ? $"✅ Added type: {typeName}"
                 : $"❌ Failed to add type.");
         }
@@ -39,7 +39,7 @@ namespace FFAWMT.Services
             if (active.HasValue) cmd.Parameters.AddWithValue("@Active", active.Value);
 
             int rows = cmd.ExecuteNonQuery();
-            Console.WriteLine(rows > 0
+            Logger.Log(rows > 0
                 ? $"✅ Updated type ID {typeId}"
                 : $"❌ No changes made for type ID {typeId}");
         }

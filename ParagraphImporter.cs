@@ -33,7 +33,7 @@ namespace FFAWMT.Services
 
         public static void Run()
         {
-            Console.WriteLine("Starting paragraph import process...");
+            Logger.Log("Starting paragraph import process...");
             int totalImported = 0;
 
             using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
@@ -67,7 +67,7 @@ namespace FFAWMT.Services
                     string html = item.Html;
 
                     var paragraphs = ExtractParagraphs(html);
-                    Console.WriteLine($"Found {paragraphs.Count} paragraphs for Content_ID {contentId}...");
+                    Logger.Log($"Found {paragraphs.Count} paragraphs for Content_ID {contentId}...");
 
                     var insertTranslation = new SqlCommand(@"
                         INSERT INTO Articles_Translations (Content_ID, Language_ID)
@@ -103,9 +103,9 @@ namespace FFAWMT.Services
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"❌ Insert failed at Content_ID {contentId}, Paragraph {paragraphNumber - 1}");
-                            Console.WriteLine($"TypeID: {typeId}, Text: {trimmedText.Substring(0, Math.Min(100, trimmedText.Length))}");
-                            Console.WriteLine("Error: " + ex.Message);
+                            Logger.Log($"❌ Insert failed at Content_ID {contentId}, Paragraph {paragraphNumber - 1}");
+                            Logger.Log($"TypeID: {typeId}, Text: {trimmedText.Substring(0, Math.Min(100, trimmedText.Length))}");
+                            Logger.Log("Error: " + ex.Message);
                         }
                     }
 
@@ -115,12 +115,12 @@ namespace FFAWMT.Services
                 UpdateParagraphCounts(connection);
                 UpdateTranslatedTitles(connection);
             }
-            Console.WriteLine($"Paragraph import complete. {totalImported} article(s) processed.");
+            Logger.Log($"Paragraph import complete. {totalImported} article(s) processed.");
         }
 
         private static void UpdateTranslatedTitles(SqlConnection connection)
         {
-            Console.WriteLine("Updating translated titles...");
+            Logger.Log("Updating translated titles...");
 
             var cmd = new SqlCommand(@"
                 UPDATE t
@@ -133,12 +133,12 @@ namespace FFAWMT.Services
                 ", connection);
 
             int updated = cmd.ExecuteNonQuery();
-            Console.WriteLine($"✔️ Updated translated titles for {updated} English translations.");
+            Logger.Log($"✔️ Updated translated titles for {updated} English translations.");
         }
 
         private static void UpdateParagraphCounts(SqlConnection connection)
         {
-            Console.WriteLine("Updating paragraph counts...");
+            Logger.Log("Updating paragraph counts...");
 
             var cmd = new SqlCommand(@"
                 UPDATE t
@@ -155,12 +155,12 @@ namespace FFAWMT.Services
                 ", connection);
 
             int updated = cmd.ExecuteNonQuery();
-            Console.WriteLine($"✔️ Updated paragraph counts for {updated} English translations.");
+            Logger.Log($"✔️ Updated paragraph counts for {updated} English translations.");
         }
 
         private static void UpdateSeparatorLines(SqlConnection connection)
         {
-            Console.WriteLine("Updating separator paragraph numbers (~~~)...");
+            Logger.Log("Updating separator paragraph numbers (~~~)...");
 
             // First, get all Translation_IDs for English articles
             var cmd = new SqlCommand(@"
@@ -181,7 +181,7 @@ namespace FFAWMT.Services
                 ", connection);
 
             int updated = cmd.ExecuteNonQuery();
-            Console.WriteLine($"✔️ Updated separator lines for {updated} English translations.");
+            Logger.Log($"✔️ Updated separator lines for {updated} English translations.");
         }
 
         private static List<ParagraphBlock> ExtractParagraphs(string html)

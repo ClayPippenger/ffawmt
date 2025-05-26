@@ -15,7 +15,7 @@ namespace FFAWMT.Services
 
         public static async Task SyncWordPressMetadataAsync()
         {
-            Console.WriteLine("Starting WordPress metadata sync...");
+            Logger.Log("Starting WordPress metadata sync...");
 
             int page = 1;
             int totalProcessed = 0;
@@ -29,7 +29,7 @@ namespace FFAWMT.Services
                     var response = await client.GetAsync(url);
                     if (!response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine($"Failed to fetch posts (HTTP {response.StatusCode})");
+                        Logger.Log($"Failed to fetch posts (HTTP {response.StatusCode})");
                         break;
                     }
 
@@ -59,7 +59,7 @@ namespace FFAWMT.Services
                                 }
                                 else
                                 {
-                                    Console.WriteLine($"Failed to fetch category {catId}");
+                                    Logger.Log($"Failed to fetch category {catId}");
                                 }
                             }
                         }
@@ -74,12 +74,12 @@ namespace FFAWMT.Services
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error during sync: " + ex.Message);
+                    Logger.Log("Error during sync: " + ex.Message);
                     break;
                 }
             }
 
-            Console.WriteLine("WordPress metadata sync complete.");
+            Logger.Log("WordPress metadata sync complete.");
         }
     }
 }

@@ -27,7 +27,7 @@ namespace FFAWMT.Services
 
         public static void Run()
         {
-            Console.WriteLine("[MP3] Starting paragraph queue loader...");
+            Logger.Log("[MP3] Starting paragraph queue loader...");
 
             var items = new List<ParagraphWorkItem>();
 
@@ -82,7 +82,7 @@ namespace FFAWMT.Services
             }
             reader.Close();
 
-            Console.WriteLine($"[MP3] Queue loaded: {items.Count} paragraph(s) pending audio.");
+            Logger.Log($"[MP3] Queue loaded: {items.Count} paragraph(s) pending audio.");
 
             var byArticle = items.GroupBy(i => i.ArticleID).OrderBy(g => g.First().ArticleName);
             int articleCount = 0;
@@ -90,7 +90,7 @@ namespace FFAWMT.Services
             foreach (var group in byArticle)
             {
                 var first = group.First();
-                Console.WriteLine($"[MP3] Article_ID: { first.ArticleID} | Name: { first.ArticleName}");
+                Logger.Log($"[MP3] Article_ID: { first.ArticleID} | Name: { first.ArticleName}");
 
                 var sorted = group.OrderBy(i => i.ParagraphNumber).ToList();
                 var mergedFiles = new List<string>();
@@ -101,16 +101,16 @@ namespace FFAWMT.Services
                     var voice = VoiceSelector.GetVoice(item);
                     if (voice == null)
                     {
-                        Console.WriteLine($"⚠️  Voice not found for Paragraph_ID {item.ParagraphID}. Skipping.");
+                        Logger.Log($"⚠️  Voice not found for Paragraph_ID {item.ParagraphID}. Skipping.");
                         continue;
                     }
 
-                    Console.WriteLine($"🎧 Generating MP3 for Paragraph_ID {item.ParagraphID} | Role: {voice.RoleName}");
+                    Logger.Log($"🎧 Generating MP3 for Paragraph_ID {item.ParagraphID} | Role: {voice.RoleName}");
 
                     int? fileId = TTSManager.GenerateAndStoreMp3(connection, item.ParagraphID, cleanText, voice.VoiceId, voice.RoleName);
                     if (fileId == null)
                     {
-                        Console.WriteLine($"❌ Failed to create MP3 for Paragraph_ID {item.ParagraphID}");
+                        Logger.Log($"❌ Failed to create MP3 for Paragraph_ID {item.ParagraphID}");
                         continue;
                     }
 
@@ -122,7 +122,7 @@ namespace FFAWMT.Services
                     audioCmd.Parameters.AddWithValue("@VID", voice.VoiceId);
                     audioCmd.ExecuteNonQuery();
 
-                    Console.WriteLine($"✅ MP3 linked for Paragraph_ID {item.ParagraphID} as File_ID {fileId.Value}");
+                    Logger.Log($"✅ MP3 linked for Paragraph_ID {item.ParagraphID} as File_ID {fileId.Value}");
 
                     string fragPath = $@"{AppConfig.Current.AppMP3FragmentsPath}fragment_{item.ParagraphID}.mp3";
                     if (File.Exists(fragPath))
@@ -138,18 +138,18 @@ namespace FFAWMT.Services
                         byte[] bytes = File.ReadAllBytes(path);
                         output.Write(bytes, 0, bytes.Length);
                     }
-                    Console.WriteLine($"📦 Merged article MP3 saved: {mergedPath}");
+                    Logger.Log($"📦 Merged article MP3 saved: {mergedPath}");
 
                     foreach (var path in mergedFiles)
                     {
                         try
                         {
                             File.Delete(path);
-                            Console.WriteLine($"🧹 Deleted fragment: {path}");
+                            Logger.Log($"🧹 Deleted fragment: {path}");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"[CLEANUP ERROR] Could not delete {path}: {ex.Message}");
+                            Logger.Log($"[CLEANUP ERROR] Could not delete {path}: {ex.Message}");
                         }
                     }
                 }
@@ -157,12 +157,11 @@ namespace FFAWMT.Services
                 articleCount++;
                 if (articleCount % 20 == 0)
                 {
-                    Console.WriteLine($"[BATCH PAUSE] Completed { articleCount} articles. Press [Enter] to continue...");
-                    Console.ReadLine();
+                    Logger.Log($"[BATCH PAUSE] Completed { articleCount} articles...");
                 }
             }
 
-            Console.WriteLine("[MP3] All done.");
+            Logger.Log("[MP3] All done.");
         }
     }
 }

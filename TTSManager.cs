@@ -35,7 +35,7 @@ namespace FFAWMT.Services
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"[AZURE ERROR] {response.StatusCode} - {response.ReasonPhrase}");
+                    Logger.Log($"[AZURE ERROR] {response.StatusCode} - {response.ReasonPhrase}");
                     return null;
                 }
 
@@ -43,7 +43,7 @@ namespace FFAWMT.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[AZURE EXCEPTION] {ex.Message}");
+                Logger.Log($"[AZURE EXCEPTION] {ex.Message}");
                 return null;
             }
         }
@@ -72,7 +72,7 @@ namespace FFAWMT.Services
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"[OPENAI ERROR] {response.StatusCode} - {response.ReasonPhrase}");
+                    Logger.Log($"[OPENAI ERROR] {response.StatusCode} - {response.ReasonPhrase}");
                     return null;
                 }
 
@@ -80,7 +80,7 @@ namespace FFAWMT.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[OPENAI EXCEPTION] {ex.Message}");
+                Logger.Log($"[OPENAI EXCEPTION] {ex.Message}");
                 return null;
             }
         }
@@ -92,9 +92,9 @@ namespace FFAWMT.Services
                 string normalizedText = (text ?? "").Trim();
                 string fileHash = ComputeTextHash(normalizedText);
 
-                Console.WriteLine($"[TTS CHECK] Paragraph_ID: { paragraphId}, Role: { roleName}                ");
-                Console.WriteLine($"[TEXT HASH] {fileHash}");
-                Console.WriteLine($"[TEXT LEN] {normalizedText.Length} characters");
+                Logger.Log($"[TTS CHECK] Paragraph_ID: { paragraphId}, Role: { roleName}                ");
+                Logger.Log($"[TEXT HASH] {fileHash}");
+                Logger.Log($"[TEXT LEN] {normalizedText.Length} characters");
 
                 // Check API File_Store for existing hash
                 var checkApi = new SqlCommand("SELECT File_ID FROM API.dbo.File_Store WHERE File_Hash = @Hash", connection);
@@ -105,7 +105,7 @@ namespace FFAWMT.Services
                 if (existingApi != null)
                 {
                     fileIdApi = (int)existingApi;
-                    Console.WriteLine($"[API] ✅ File reuse: File_ID {fileIdApi}");
+                    Logger.Log($"[API] ✅ File reuse: File_ID {fileIdApi}");
                 }
                 else
                 {
@@ -119,7 +119,7 @@ namespace FFAWMT.Services
                     string engineName = reader.GetString(1);
                     reader.Close();
 
-                    Console.WriteLine($"[TTS] Generating MP3 for Paragraph_ID {paragraphId} | Engine: {engineName} | Voice: {voiceName}");
+                    Logger.Log($"[TTS] Generating MP3 for Paragraph_ID {paragraphId} | Engine: {engineName} | Voice: {voiceName}");
 
                     byte[] audioBytes = engineName switch
                     {
@@ -130,7 +130,7 @@ namespace FFAWMT.Services
 
                     if (audioBytes == null || audioBytes.Length == 0)
                     {
-                        Console.WriteLine($"[TTS ERROR] ❌ Audio generation failed.");
+                        Logger.Log($"[TTS ERROR] ❌ Audio generation failed.");
                         return null;
                     }
 
@@ -146,7 +146,7 @@ namespace FFAWMT.Services
 
                     string diskPath = $@"R:\Shared\Website Archives\fragments\fragment_{paragraphId}.mp3";
                     File.WriteAllBytes(diskPath, audioBytes);
-                    Console.WriteLine($"[DISK] 💾 Saved fragment to {diskPath}");
+                    Logger.Log($"[DISK] 💾 Saved fragment to {diskPath}");
                 }
 
                 // Sync to FFA
@@ -158,7 +158,7 @@ namespace FFAWMT.Services
                 if (existingFfa != null)
                 {
                     fileIdFfa = (int)existingFfa;
-                    Console.WriteLine($"[FFA] ✅ File already exists: File_ID {fileIdFfa}");
+                    Logger.Log($"[FFA] ✅ File already exists: File_ID {fileIdFfa}");
                 }
                 else
                 {
@@ -175,14 +175,14 @@ namespace FFAWMT.Services
                     insertFfa.Parameters.AddWithValue("@Size", fileData.Length);
                     insertFfa.Parameters.AddWithValue("@Binary", fileData);
                     fileIdFfa = (int)insertFfa.ExecuteScalar();
-                    Console.WriteLine($"[FFA] ✅ File inserted: File_ID {fileIdFfa}");
+                    Logger.Log($"[FFA] ✅ File inserted: File_ID {fileIdFfa}");
                 }
 
                 return fileIdFfa;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[TTSManager ERROR] {ex.Message}");
+                Logger.Log($"[TTSManager ERROR] {ex.Message}");
                 return null;
             }
         }

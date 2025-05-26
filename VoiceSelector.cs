@@ -37,7 +37,7 @@ namespace FFAWMT.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"CRITICAL ERROR: Voice role '{role}' not found in Voice_Roles table.");
+                Logger.Log($"CRITICAL ERROR: Voice role '{role}' not found in Voice_Roles table.");
                 return null;
             }
         }

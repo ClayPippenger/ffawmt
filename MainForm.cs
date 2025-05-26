@@ -21,15 +21,33 @@ namespace FFAWMT
         {
             try
             {
-                AppConfig.Load();
-                Log("[INIT] AppConfig loaded.");
-                Log("FFA Translation Utility Started...");
-                Log("Select an action using the buttons above.");
+                Logger.Init(AppendLogMessage);
+                Logger.Log("[INIT] AppConfig loaded.");
+                Logger.Log("FFA Translation Utility Started...");
+                Logger.Log("Select an action using the buttons above.");
             }
             catch (Exception ex)
             {
-                Log($"CRITICAL ERROR during startup: {ex.Message}");
+                Logger.Log($"CRITICAL ERROR during startup: {ex.Message}");
             }
+        }
+
+        private void AppendLogMessage(string message)
+        {
+            if (txtConsole.InvokeRequired)
+            {
+                txtConsole.BeginInvoke(new Action<string>(AppendLogMessage), message);
+            }
+            else
+            {
+                txtConsole.AppendText(message + Environment.NewLine);
+                txtConsole.ScrollToCaret();
+            }
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Logger.Close();
         }
 
         private void InitializeConsoleRedirect()
@@ -38,22 +56,17 @@ namespace FFAWMT
             Console.SetError(new TextBoxWriter(txtConsole, _consoleBuffer));
         }
 
-        private void Log(string message)
-        {
-            txtConsole.AppendText(message + Environment.NewLine);
-        }
-
         private async void btnSyncWordPress_Click(object sender, EventArgs e)
         {
             try
             {
-                Log("[Action] Syncing WordPress metadata...");
+                Logger.Log("[Action] Syncing WordPress metadata...");
                 await WordPressAPIManager.SyncWordPressMetadataAsync();
-                Log("[Done] Sync complete.");
+                Logger.Log("[Done] Sync complete.");
             }
             catch (Exception ex)
             {
-                Log("[ERROR] " + ex.Message);
+                Logger.Log("[ERROR] " + ex.Message);
             }
         }
 
@@ -61,13 +74,13 @@ namespace FFAWMT
         {
             try
             {
-                Log("[Action] Importing article paragraphs...");
+                Logger.Log("[Action] Importing article paragraphs...");
                 ParagraphImporter.Run();
-                Log("[Done] Paragraph import complete.");
+                Logger.Log("[Done] Paragraph import complete.");
             }
             catch (Exception ex)
             {
-                Log("[ERROR] " + ex.Message);
+                Logger.Log("[ERROR] " + ex.Message);
             }
         }
 
@@ -75,13 +88,13 @@ namespace FFAWMT
         {
             try
             {
-                Log("[Action] Cleaning article paragraphs...");
+                Logger.Log("[Action] Cleaning article paragraphs...");
                 ParagraphCleaner.Run();
-                Log("[Done] Paragraph cleaning complete.");
+                Logger.Log("[Done] Paragraph cleaning complete.");
             }
             catch (Exception ex)
             {
-                Log("[ERROR] " + ex.Message);
+                Logger.Log("[ERROR] " + ex.Message);
             }
         }
 
@@ -89,15 +102,15 @@ namespace FFAWMT
         {
             try
             {
-                Log("[Action] Performing full reset...");
+                Logger.Log("[Action] Performing full reset...");
                 await WordPressAPIManager.SyncWordPressMetadataAsync();
                 ParagraphImporter.Run();
                 ParagraphCleaner.Run();
-                Log("[Done] Full reset complete.");
+                Logger.Log("[Done] Full reset complete.");
             }
             catch (Exception ex)
             {
-                Log("[ERROR] " + ex.Message);
+                Logger.Log("[ERROR] " + ex.Message);
             }
         }
 
@@ -105,19 +118,19 @@ namespace FFAWMT
         {
             try
             {
-                Log("[Action] Creating MP3 files for English paragraphs...");
+                Logger.Log("[Action] Creating MP3 files for English paragraphs...");
                 Mp3Generator.Run();
-                Log("[Done] MP3 generation complete.");
+                Logger.Log("[Done] MP3 generation complete.");
             }
             catch (Exception ex)
             {
-                Log("[ERROR] " + ex.Message);
+                Logger.Log("[ERROR] " + ex.Message);
             }
         }
 
         private void btnExit_Click(object sender, EventArgs e)
         {
-            Log("Exiting application...");
+            Logger.Log("Exiting application...");
             Application.Exit();
         }
 

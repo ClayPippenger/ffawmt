@@ -85,7 +85,7 @@ namespace FFAWMT.Services
 
         public static void Run()
         {
-            Console.WriteLine("Starting paragraph clean and text extraction process...");
+            Logger.Log("Starting paragraph clean and text extraction process...");
 
             using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
             connection.Open();
@@ -200,7 +200,7 @@ namespace FFAWMT.Services
                 updateCmd.ExecuteNonQuery();
             }
 
-            Console.WriteLine("Paragraph cleaning complete.");
+            Logger.Log("Paragraph cleaning complete.");
         }
 
         private static int GetExistingTypeId(int paragraphId, SqlConnection conn)

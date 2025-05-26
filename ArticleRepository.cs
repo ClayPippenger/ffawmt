@@ -55,7 +55,7 @@ namespace FFAWMT.Data
                                 updateCmd.Parameters.AddWithValue("@ArticleID", articleId);
 
                                 updateCmd.ExecuteNonQuery();
-                                Console.WriteLine($"Updated article: {slug}");
+                                Logger.Log($"Updated article: {slug}");
 
 
                                 // Ensure Type 'WordPress' exists and get its ID
@@ -88,12 +88,12 @@ namespace FFAWMT.Data
                                 insertCmd.Parameters.AddWithValue("@Modified", post.modified);
 
                                 insertCmd.ExecuteNonQuery();
-                                Console.WriteLine($"Updated article contents: {slug}");
+                                Logger.Log($"Updated article contents: {slug}");
 
                             }
                             else
                             {
-                                Console.WriteLine($"No update needed for: {slug}");
+                                Logger.Log($"No update needed for: {slug}");
                             }
 
                             break;
@@ -119,7 +119,7 @@ namespace FFAWMT.Data
                         insertCmd.Parameters.AddWithValue("@ArticleURL", articleUrl);
 
                         insertCmd.ExecuteNonQuery();
-                        Console.WriteLine($"Inserted new article: {slug}");
+                        Logger.Log($"Inserted new article: {slug}");
                     }
                 }
             }
