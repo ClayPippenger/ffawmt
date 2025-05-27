@@ -84,19 +84,17 @@ Example:
 
 This application was a console application first.  This section will be merged into a feature list later.
 
-|---------------------------------------------------|
-| Option | Description								|
-|--------|------------------------------------------|
-| 1 | Download WordPress metadata into SQL			| TESTED
-| 2 | Breakout article paragraphs from stored HTML	| TESTED
-| C | Clean paragraph records and apply types		| TESTED
-| 3 | Run Menu Items 1, 2, C						| TESTED
-| 4 | Generate MP3s (English)						| TODO TESTING MORE
-| 6 | Translate paragraphs							| NOT WORKING
-| 7 | Generate MP3s (Foreign)						| NOT WORKING
-| 9 | Rebuild language `[ShortCode]` JavaScript		| NOT WORKING
-| X | Exit application								| TESTED
-|---------------------------------------------------|
+| Option | Description | Status |
+|--------|------------------------------------------|-------------------|
+| 1 | Download WordPress metadata into SQL			| TESTED			|
+| 2 | Breakout article paragraphs from stored HTML	| TESTED			|
+| C | Clean paragraph records and apply types		| TESTED			|
+| 3 | Run Menu Items 1, 2, C						| TESTED			|
+| 4 | Generate MP3s (English)						| TODO TESTING MORE	|
+| 6 | Translate paragraphs							| NOT WORKING		|
+| 7 | Generate MP3s (Foreign)						| NOT WORKING		|
+| 9 | Rebuild language `[ShortCode]` JavaScript		| NOT WORKING		|
+| X | Exit application								| TESTED			|
 
 ---
 
@@ -166,6 +164,15 @@ log_dir\FFA_yyyy-MM-dd_HHmmss.txt
 
 ---
 
+## 🎯 Overall Problems/Comments For Future Consideration
+
+- When you run Menu option 1, 2, C it is different than just running the 3 which is suppose to do the same.  Consider this.
+- Verify that updates to articles are only processed once
+- Begin to verify coupled MP3 generated files
+- 
+
+---
+
 ## 📈 Future Enhancement Plan
 
 - Complete MP3 English testing
@@ -200,15 +207,15 @@ log_dir\FFA_yyyy-MM-dd_HHmmss.txt
 	- Runtime timeout adjustment
 - 
 - Historical Book MP3 Creator:
-	- ✨ Features
+	- Features
 		- This is a Windows desktop application designed for archiving, processing, and narrating historical scanned documents. Built for ultra-wide screens and long-term reproducibility, the tool offers structured, operator-driven control over each step of the workflow.
-	- 🔹 Book Management
+	- Book Management
 		- Add scanned PDF books to a searchable, categorized library
 		- Store full binary PDF and derived data in SQL Server
 		- Prevent duplicate ingestion using SHA-256 hashing
 		- View books grouped by user-defined categories
 		- 
-	- 🔹 Page Viewing & Editing
+	- Page Viewing & Editing
 		- Ultra-wide, single-form layout with three-panel view:
 			- Thumbnail navigation
 			- Full-page image viewer
@@ -220,18 +227,18 @@ log_dir\FFA_yyyy-MM-dd_HHmmss.txt
 			- Splitting dual-page scans into two separate pages
 			- Dynamic page numbering (with support for negative numbers and renumbering on-the-fly)
 			- 
-	- 🔹 OCR Zone Management
+	- OCR Zone Management
 		- Default full-page zone or custom drawn rectangular zones
 		- Multiple zones per page ordered by drawing sequence
 		- Reset and redraw zones at any time
 		- Visual overlay with color-coded zone states
 		- 
-	- 🔹 OCR & Text Editing
+	- OCR & Text Editing
 		- Manual “Process Page” or “Process Entire Book” triggers OCR using Tesseract
 		- Editable per-zone OCR output with inline feedback
 		- Reprocessing a zone will overwrite any previous edits
 		- 
-	- 🔹 Voice Assignment & Narration
+	- Voice Assignment & Narration
 		- Global default voice setting (Azure or ChatGPT)
 		- Per-zone and per-insertion voice overrides
 		- Insert custom narration blocks:
@@ -240,24 +247,24 @@ log_dir\FFA_yyyy-MM-dd_HHmmss.txt
 			- Between zones
 		- Inline MP3 preview of any zone or narration
 		- 
-	- 🔹 Audio Fragment Generation
+	- Audio Fragment Generation
 		- Generate MP3 fragments per zone or insertion
 		- Store fragment metadata, hash, and voice selection in the database
 		- Reuse unchanged fragments automatically
 		- 
-	- 🔹 Final Output Compilation
+	- Final Output Compilation
 		- Compile all finalized zones and insertions into a single MP3 per book
 		- Output file saved as `Compiled/article_{BookID}.mp3`
 		- Optional silence trimming and volume normalization
 		- 
-	- 🔹 Batch Actions Panel
+	- Batch Actions Panel
 		- Process All Pages (OCR unprocessed pages)
 		- Reprocess Current Page (overwrite edited text)
 		- Regenerate MP3s (only if changed)
 		- Reprocess All Pages (force overwrite and audio regeneration)
 		- Compile Book Audio (final stitching of all content)
 		- 
-	- 🔹 Visual Feedback
+	- Visual Feedback
 		- Status icons and color overlays for:
 			- Unprocessed
 			- Excluded
@@ -266,7 +273,7 @@ log_dir\FFA_yyyy-MM-dd_HHmmss.txt
 			- Custom voice
 			- Edited text
 			- 
-	- 🔹 Summary
+	- Summary
 		- This feature is designed for precise, repeatable processing of historical scanned documents into narrated audio — with complete control at each stage.
 - 
 
