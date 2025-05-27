@@ -121,7 +121,6 @@ namespace FFAWMT
             try
             {
                 Logger.Log("[Begin] FIRST 3 STEPS");
-                // TODO - I think this is not working the same as doing them individually
                 await WordPressAPIManager.SyncWordPressMetadataAsync();
                 ParagraphImporter.Run();
                 ParagraphCleaner.Run();
