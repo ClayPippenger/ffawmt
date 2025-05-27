@@ -73,7 +73,6 @@ CREATE TABLE [dbo].[Articles] (
     [Article_Image_Location] NVARCHAR(150) NULL,
     [Article_Audio_Link] NVARCHAR(150) NULL,
     [Article_Found] BIT NOT NULL DEFAULT 0,
-    [Article_Paragraph_Count] INT NOT NULL DEFAULT 0,
     [Article_URL] NVARCHAR(150) NULL,
     [WordPress_ID] INT NULL,
     [WordPress_Slug] NVARCHAR(150) NULL,
@@ -304,18 +303,32 @@ CREATE TABLE Paragraph_Cleaning_Rules (
     Rule_Name NVARCHAR(100) NOT NULL,
     Match_Type NVARCHAR(50) NOT NULL,        -- 'Contains' or 'Regex'
     Match_Value NVARCHAR(MAX) NOT NULL,
-    Clean_Output NVARCHAR(MAX) NULL,         -- NULL = leave unchanged, '' = clear
-    Text_Output NVARCHAR(MAX) NULL,          -- same logic
+    Clean_Output NVARCHAR(MAX) NULL,       
+    Text_Output NVARCHAR(MAX) NULL,        
     Content_Type_Name NVARCHAR(100) NULL,
     Transform_Type NVARCHAR(50) NULL,
-    Active BIT NOT NULL DEFAULT 1
+    Active BIT NOT NULL DEFAULT 1,
+    Priority INT NOT NULL DEFAULT 100,
+    Allow_Chain BIT NOT NULL DEFAULT 0,
+    Log_Only BIT NOT NULL DEFAULT 0
 );
 GO
 
-ALTER TABLE Paragraph_Cleaning_Rules
-ADD Priority INT NOT NULL DEFAULT 100,
-    Allow_Chain BIT NOT NULL DEFAULT 0,
-    Log_Only BIT NOT NULL DEFAULT 0;
+INSERT INTO Paragraph_Cleaning_Rules (
+    Rule_Name, Match_Type, Match_Value,
+    Clean_Output, Text_Output, Content_Type_Name,
+    Transform_Type, Active, Priority, Allow_Chain, Log_Only
+)
+VALUES
+('Audio Download Link',         'Regex',    '<a[^>]+href\s*=\s*[''"][^''"]+\.mp3[''"]',              NULL, NULL, 'Header Audio',           NULL,         1, 100, 0, 0),
+('Spacing Break',               'Regex',    '<p[^>]*>(&nbsp;|\\s)*</p>',                             NULL, NULL, 'Break',                  NULL,         1, 100, 0, 0),
+('Indented Quotation (40px)',   'Regex',    'padding-left:\s*40px',                                   NULL, NULL, 'Indented Quotation',     'strippatag', 1, 100, 0, 0),
+('Key Takeaways (H6)',          'Regex',    '^<h6>Key Takeaways</h6>$',                                'Key Takeaways', 'Key Takeaways', 'Key Takeaways', NULL, 1, 5, 0, 0),
+('General H6 Title',            'Regex',    '<h6>.*?</h6>',                                            NULL, NULL, 'Title',                 'strippatag', 1, 99, 0, 0),
+('Decode All HTML Entities',    'Regex',    '&#[0-9]+;',                                               NULL, NULL, NULL,                   'decodehtml', 1, 20, 1, 0),
+('Sub Title (H6)',              'Regex',    '<h6>.*?</h6>',                                            NULL, NULL, 'Sub Title',             'strippatag', 1, 100, 0, 0),
+('Default Paragraph – Promote to Content', 'Regex', '^<p.*?>.*?</p>$',                                 NULL, NULL, 'Content',               'strippatag', 1, 600, 0, 0),
+('Strip LI Tags – For List Levels', 'Regex', '^<li>.*?</li>$',                                         NULL, NULL, NULL,                   'strippatag', 1, 300, 0, 0);
 GO
 
 CREATE TABLE Articles_Paragraphs_Clean_Log (
@@ -571,7 +584,6 @@ INSERT INTO dbo.Articles (
     Article_Image_Location,
     Article_Audio_Link,
     Article_Found,
-    Article_Paragraph_Count,
     Last_Modified,
     Article_URL
 )
@@ -582,7 +594,6 @@ SELECT
     Article_Image_Location,
     Article_Audio_Link,
     Article_Found,
-    Article_Paragraph_Count,
     LastModified,
     Article_URL
 FROM LTDB.dbo.Articles;
@@ -602,62 +613,6 @@ SELECT
 	Active
 FROM LTDB.dbo.Languages
 ORDER BY Language_Name;
-GO
-
--- Rule 1: Audioplayer shortcode
-INSERT INTO Paragraph_Cleaning_Rules
-(Rule_Name, Match_Type, Match_Value, Clean_Output, Text_Output, Content_Type_Name)
-VALUES
-('Audio Shortcode', 'Contains', '[audioplayer]', '', '', 'Header Audio');
-GO
-
--- rule 2: 
-INSERT INTO Paragraph_Cleaning_Rules
-(Rule_Name, Match_Type, Match_Value, Clean_Output, Text_Output, Content_Type_Name)
-VALUES
-(
-    'Audio Download Link',
-    'Regex',
-    '<a[^>]+href\s*=\s*[''"][^''"]+\.mp3[''"]',
-    '',
-    '',
-    'Header Audio'
-);
-GO
-
--- Rule 3: Translation Dropdown Shortcode
-INSERT INTO Paragraph_Cleaning_Rules
-(Rule_Name, Match_Type, Match_Value, Clean_Output, Text_Output, Content_Type_Name)
-VALUES
-('Translation Dropdown', 'Regex', '[article_foreign_id_[0-9]+]', '', '', 'Header Translation Dropdown');
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules
-(Rule_Name, Match_Type, Match_Value, Clean_Output, Text_Output, Content_Type_Name, Transform_Type)
-VALUES
-(
-    'Spacing Break',
-    'Regex',
-    '<p[^>]*>(&nbsp;|\\s)*</p>',
-    '',
-    '',
-    'Break',
-	NULL
-);
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules
-(Rule_Name, Match_Type, Match_Value, Clean_Output, Text_Output, Content_Type_Name, Transform_Type)
-VALUES
-(
-    'Indented Quotation (40px)',
-    'Regex',
-    'padding-left:\s*\d+px',
-    NULL,
-    NULL,
-    'Indented Quotation',
-	'strippatag'
-);
 GO
 
 CREATE VIEW view_Articles_Paragraphs_char_overview AS
@@ -712,401 +667,6 @@ FROM EntityMap m
 LEFT JOIN HexCounted h ON m.Html_Entity = h.Html_Entity
 LEFT JOIN CharCounted c ON m.Html_Entity = c.Html_Entity
 LEFT JOIN PlainCharCounted p ON m.Html_Entity = p.Html_Entity
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules (
-    Rule_Name,
-    Match_Type,
-    Match_Value,
-    Clean_Output,
-    Text_Output,
-    Content_Type_Name,
-    Transform_Type,
-    Active,
-    Priority,
-    Allow_Chain,
-    Log_Only
-)
-VALUES (
-    'Separator Line (~~~)',
-    'Contains',
-    '<p>~~~</p>',
-    '',
-    '',
-    'Separator',
-    NULL,
-    1,
-    5,
-    0,
-    0
-);
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules (
-    Rule_Name, Match_Type, Match_Value,
-    Clean_Output, Text_Output, Content_Type_Name,
-    Transform_Type, Active, Priority, Allow_Chain, Log_Only
-)
-VALUES (
-    'Key Takeaways (H6)',
-    'Regex',
-    '^<h6>Key Takeaways</h6>$',
-    'Key Takeaways',
-    'Key Takeaways',
-    'Key Takeaways',
-    NULL,
-    1,
-    5,
-    0,
-    0
-);
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules (
-    Rule_Name, Match_Type, Match_Value,
-    Clean_Output, Text_Output, Content_Type_Name,
-    Transform_Type, Active, Priority, Allow_Chain, Log_Only
-)
-VALUES (
-    'General H6 Title',
-    'Regex',
-    '<h6.*?>.*?</h6>',
-    NULL,
-    NULL,
-    'Title',
-    'strippatag',
-    1,
-    20,
-    1,
-    0
-);
-GO
-
-UPDATE Paragraph_Cleaning_Rules
-SET Match_Type = 'Regex',
-    Match_Value = '^<h6>Key Takeaways</h6>$',
-    Clean_Output = 'Key Takeaways',
-    Text_Output = 'Key Takeaways',
-    Content_Type_Name = 'Key Takeaways',
-    Transform_Type = NULL,
-    Allow_Chain = 0
-WHERE Rule_Name = 'Key Takeaways (H6)';
-GO
-
-UPDATE Paragraph_Cleaning_Rules
-SET Match_Type = 'Regex',
-    Match_Value = '<h6.*?>.*?</h6>',
-    Clean_Output = NULL,
-    Text_Output = NULL,
-    Content_Type_Name = 'Title',
-    Transform_Type = 'strippatag',
-    Allow_Chain = 1
-WHERE Rule_Name = 'General H6 Title';
-GO
-
-UPDATE Paragraph_Cleaning_Rules
-SET Match_Type = 'Regex',
-    Match_Value = '<h6>.*?</h6>',
-    Transform_Type = 'strippatag',
-    Content_Type_Name = 'Title',
-    Allow_Chain = 0,
-    Priority = 99
-WHERE Rule_Name = 'General H6 Title';
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules (
-    Rule_Name,
-    Match_Type,
-    Match_Value,
-    Clean_Output,
-    Text_Output,
-    Content_Type_Name,
-    Transform_Type,
-    Active
-) VALUES (
-    'Indented Quotation – Strip blockquote+p',
-    'Regex',
-    '^<blockquote><p>.*?</p></blockquote>$',
-    NULL,                -- Let transform handle it
-    NULL,                -- Let system extract plain text
-    'Indented Quotation',
-    'stripblockquoteptag',
-    1
-);
-GO
-
-UPDATE Paragraph_Cleaning_Rules
-SET 
-    Match_Type = 'Contains',
-    Match_Value = '<blockquote',
-    Transform_Type = 'stripblockquoteptag',
-    Content_Type_Name = 'Indented Quotation',
-    Allow_Chain = 0 -- stop here if match occurs
-WHERE Rule_Name = 'Indented Quotation – Strip blockquote+p';
-go
-
-INSERT INTO Paragraph_Cleaning_Rules (
-    Rule_Name, Match_Type, Match_Value,
-    Clean_Output, Text_Output, Content_Type_Name,
-    Transform_Type, Active, Priority, Allow_Chain, Log_Only
-)
-VALUES (
-    'Final Cleanup - Strip Common Wrappers',
-    'Regex',
-    '^<(li|p|div|span)[^>]*>.*?</\\1>$',
-    NULL,
-    NULL,
-    NULL,
-    'strippatag',
-    1,
-    998,
-    1,
-    0
-);
-go
-
-INSERT INTO Paragraph_Cleaning_Rules
-(Rule_Name, Match_Type, Match_Value, Clean_Output, Text_Output, Content_Type_Name, Transform_Type, Active, Priority, Allow_Chain, Log_Only)
-VALUES
-('Strip outer P tags', 'Regex', '^<p.*?>.*?</p>$', NULL, NULL, NULL, 'strippatag', 1, 999, 1, 0);
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules
-(Rule_Name, Match_Type, Match_Value, Clean_Output, Text_Output, Content_Type_Name, Transform_Type, Active, Priority, Allow_Chain, Log_Only)
-VALUES
-('Strip duplicate LI tags', 'Regex', '^<li>.*?</li>$', NULL, NULL, NULL, 'strippatag', 1, 998, 1, 0);
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules
-(Rule_Name, Match_Type, Match_Value, Clean_Output, Text_Output, Content_Type_Name, Transform_Type, Active, Priority, Allow_Chain, Log_Only)
-VALUES
-('Whitespace line only', 'Regex', '^\\s+$', '', '', 'Break', NULL, 1, 997, 0, 0);
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules
-(Rule_Name, Match_Type, Match_Value, Clean_Output, Text_Output, Content_Type_Name, Transform_Type, Active, Priority, Allow_Chain, Log_Only)
-VALUES
-('TextOnly – Remove Punctuation', 'Regex', '.*', NULL, NULL, NULL, 'removepunctuation', 1, 10, 1, 0);
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules (
-    Rule_Name, Match_Type, Match_Value,
-    Clean_Output, Text_Output, Content_Type_Name,
-    Transform_Type, Active, Priority, Allow_Chain, Log_Only
-)
-VALUES (
-    'Decode All HTML Entities',
-    'Regex',
-    '&#[0-9]+;',
-    NULL,
-    NULL,
-    NULL,
-    'decodehtml',
-    1,
-    20,  -- Early priority
-    1,
-    0
-);
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules
-(
-    Rule_Name,
-    Match_Type,
-    Match_Value,
-    Clean_Output,
-    Text_Output,
-    Content_Type_Name,
-    Transform_Type,
-    Active,
-    Priority,
-    Allow_Chain,
-    Log_Only
-)
-VALUES
-(
-    'Sub Title (H6)',
-    'Regex',
-    '<h6>.*?</h6>',
-    NULL,
-    NULL,
-    'Sub Title',
-    'strippatag',
-    1,
-    100,
-    0,
-    0
-);
-GO
-
-UPDATE Paragraph_Cleaning_Rules
-SET 
-    Active = 1,
-    Match_Value = 'padding-left:\s*40px',
-    Transform_Type = 'strippatag',
-    Clean_Output = NULL,
-    Text_Output = NULL,
-    Content_Type_Name = 'Indented Quotation'
-WHERE Rule_ID = 5;
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules
-(
-    Rule_Name,
-    Match_Type,
-    Match_Value,
-    Clean_Output,
-    Text_Output,
-    Content_Type_Name,
-    Transform_Type,
-    Active,
-    Priority,
-    Allow_Chain,
-    Log_Only
-)
-VALUES
-(
-    'Default Paragraph – Promote to Content',
-    'Regex',
-    '^<p.*?>.*?</p>$',
-    NULL,
-    NULL,
-    'Content',
-    NULL,
-    1,
-    600,
-    0,
-    0
-);
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules
-(
-    Rule_Name,
-    Match_Type,
-    Match_Value,
-    Clean_Output,
-    Text_Output,
-    Content_Type_Name,
-    Transform_Type,
-    Active,
-    Priority,
-    Allow_Chain,
-    Log_Only
-)
-VALUES
-(
-    'Separator Line – Styled Span',
-    'Regex',
-    '<span[^>]*>\\s*~~~\\s*</span>',
-    '',
-    '',
-    'Separator',
-    NULL,
-    1,
-    5,
-    0,
-    0
-);
-GO
-
-UPDATE Paragraph_Cleaning_Rules
-SET 
-    Match_Type = 'Regex',
-    Match_Value = '<[^>]+>\\s*~~~\\s*</[^>]+>',
-    Clean_Output = '',
-    Text_Output = '',
-    Content_Type_Name = 'Separator',
-    Transform_Type = 'striphtml',
-    Active = 1,
-    Priority = 6
-WHERE Rule_Name = 'Separator Line – Styled Span';
-GO
-
-UPDATE Paragraph_Cleaning_Rules
-SET 
-	Rule_Name = 'Separator Line – Exact Span',
-    Match_Type = 'Contains',
-    Match_Value = '<span style="font-size: 16px;">~~~</span>',
-    Clean_Output = '',
-    Text_Output = '',
-    Content_Type_Name = 'Separator',
-    Transform_Type = NULL,
-    Active = 1,
-    [Priority] = 4
-WHERE Rule_Name = 'Separator Line – Styled Span';
-GO
-
-UPDATE Paragraph_Cleaning_Rules
-SET Transform_Type = 'strippatag'
-WHERE Rule_Name = 'Default Paragraph – Promote to Content';
-GO
-
-INSERT INTO Paragraph_Cleaning_Rules
-(
-    Rule_Name,
-    Match_Type,
-    Match_Value,
-    Clean_Output,
-    Text_Output,
-    Content_Type_Name,
-    Transform_Type,
-    Active,
-    Priority,
-    Allow_Chain,
-    Log_Only
-)
-VALUES
-(
-    'Strip LI Tags – For List Levels',
-    'Regex',
-    '^<li>.*?</li>$',
-    NULL,
-    NULL,
-    NULL,
-    'strippatag',
-    1,
-    300,
-    0,
-    0
-);
-go
-
--- turn off all rules
-UPDATE Paragraph_Cleaning_Rules
-SET Active = 0
-GO
-
--- turn back on some rules:
--- rule 4, 15
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 19;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 18;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 17;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 16;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 4;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 15;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 6;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 7;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 2;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 3;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 8;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 1 WHERE Rule_ID = 5;
-GO
-DELETE FROM Paragraph_Cleaning_Rules
-WHERE Active = 0;
-GO
-UPDATE Paragraph_Cleaning_Rules SET Active = 0 WHERE Rule_ID = 3;
 GO
 
 UPDATE Languages SET Text_Direction = 'RTL' WHERE Language_Name = 'Arabic';
@@ -1281,6 +841,12 @@ FROM Paragraph_Audio pa
 LEFT JOIN Voices v ON pa.Voice_ID = v.Voice_ID
 LEFT JOIN File_Store fs ON pa.File_ID = fs.File_ID;
 GO
+
+
+
+
+
+
 
 -- OpenAI Voices
 INSERT INTO FFA.dbo.Voices (Voice_Name, Engine_Name, Model_Name, Notes, Active, Created_Date, Last_Modified)
@@ -2465,25 +2031,6 @@ EXEC sys.sp_addextendedproperty
   @level0type = N'SCHEMA', @level0name = N'dbo',
   @level1type = N'TABLE', @level1name = N'Articles',
   @level2type = N'COLUMN', @level2name = N'Article_Found';
-GO
-
-BEGIN TRY
-    EXEC sys.sp_dropextendedproperty 
-        @name = N'MS_Description',
-        @level0type = N'SCHEMA', @level0name = N'dbo',
-        @level1type = N'TABLE', @level1name = N'Articles',
-        @level2type = N'COLUMN', @level2name = N'Article_Paragraph_Count';
-END TRY
-BEGIN CATCH
-END CATCH;
-GO
-
-EXEC sys.sp_addextendedproperty
-  @name = N'MS_Description',
-  @value = N'Description for column Article_Paragraph_Count in Articles.',
-  @level0type = N'SCHEMA', @level0name = N'dbo',
-  @level1type = N'TABLE', @level1name = N'Articles',
-  @level2type = N'COLUMN', @level2name = N'Article_Paragraph_Count';
 GO
 
 BEGIN TRY

@@ -20,116 +20,110 @@ namespace FFAWMT.Services
             { "&#8212;", "-"  }
         };
 
-        private static string NormalizeSmartCharacters(string html)
-        {
-            string result = html;
-            foreach (var pair in CharacterReplacements)
-            {
-                result = result.Replace(pair.Key, pair.Value);
-                result = result.Replace(System.Net.WebUtility.HtmlDecode(pair.Key), pair.Value);
-            }
-            return result;
-        }
+        //public static void Run()
+        //{
+        //    Logger.Log("[Action] Starting paragraph import process...");
+        //    int totalImported = 0;
 
-        public static void Run()
-        {
-            Logger.Log("[Action] Starting paragraph import process...");
-            int totalImported = 0;
+        //    using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
+        //    {
+        //        connection.Open();
 
-            using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
-            {
-                connection.Open();
+        //        var selectCmd = new SqlCommand(@"
+        //            SELECT c.Content_ID, c.Post_Content
+        //            FROM Articles_Contents c
+        //            WHERE NOT EXISTS (
+        //                SELECT 1 FROM Articles_Paragraphs p
+        //                JOIN Articles_Translations t ON p.Translation_ID = t.Translation_ID
+        //                WHERE t.Content_ID = c.Content_ID
+        //            )", connection);
 
-                var selectCmd = new SqlCommand(@"
-                    SELECT c.Content_ID, c.Post_Content
-                    FROM Articles_Contents c
-                    WHERE NOT EXISTS (
-                        SELECT 1 FROM Articles_Paragraphs p
-                        JOIN Articles_Translations t ON p.Translation_ID = t.Translation_ID
-                        WHERE t.Content_ID = c.Content_ID
-                    )", connection);
+        //        var itemsToImport = new List<(int ContentID, string Html)>();
 
-                var itemsToImport = new List<(int ContentID, string Html)>();
+        //        using (var reader = selectCmd.ExecuteReader())
+        //        {
+        //            while (reader.Read())
+        //            {
+        //                int contentId = reader.GetInt32(0);
+        //                string html = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+        //                itemsToImport.Add((contentId, html));
+        //            }
+        //        }
 
-                using (var reader = selectCmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        int contentId = reader.GetInt32(0);
-                        string html = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
-                        itemsToImport.Add((contentId, html));
-                    }
-                }
+        //        foreach (var item in itemsToImport)
+        //        {
+        //            int contentId = item.ContentID;
+        //            string html = item.Html;
 
-                foreach (var item in itemsToImport)
-                {
-                    int contentId = item.ContentID;
-                    string html = item.Html;
+        //            var paragraphs = ExtractParagraphs(html);
+        //            Logger.Log($"Found {paragraphs.Count} paragraphs for Content_ID {contentId}...");
 
-                    var paragraphs = ExtractParagraphs(html);
-                    Logger.Log($"Found {paragraphs.Count} paragraphs for Content_ID {contentId}...");
+        //            var insertTranslation = new SqlCommand(@"
+        //                INSERT INTO Articles_Translations (Content_ID, Language_ID)
+        //                OUTPUT INSERTED.Translation_ID
+        //                VALUES (@ContentID, 1)", connection);
+        //            insertTranslation.Parameters.AddWithValue("@ContentID", contentId);
 
-                    var insertTranslation = new SqlCommand(@"
-                        INSERT INTO Articles_Translations (Content_ID, Language_ID)
-                        OUTPUT INSERTED.Translation_ID
-                        VALUES (@ContentID, 1)", connection);
-                    insertTranslation.Parameters.AddWithValue("@ContentID", contentId);
+        //            int translationId = (int)insertTranslation.ExecuteScalar();
 
-                    int translationId = (int)insertTranslation.ExecuteScalar();
+        //            int paragraphNumber = 1;
 
-                    int paragraphNumber = 1;
+        //            foreach (var para in paragraphs)
+        //            {
+        //                string trimmedText = para.TextOnly.Trim();
+        //                int typeId = para.TypeID;
 
-                    foreach (var para in paragraphs)
-                    {
-                        string trimmedText = para.TextOnly.Trim();
-                        int typeId = para.TypeID;
+        //                if (Regex.IsMatch(trimmedText, "^[\"\'‘’“”]"))
+        //                    typeId = GetTypeIdByName("Quote");
 
-                        if (Regex.IsMatch(trimmedText, "^[\"\'‘’“”]"))
-                            typeId = GetTypeIdByName("Quote");
+        //                try
+        //                {
+        //                    var insertParagraph = new SqlCommand(@"
+        //                        INSERT INTO Articles_Paragraphs
+        //                        (Translation_ID, Paragraph_Number, Content_Type_ID, Paragraph_Raw)
+        //                        VALUES (@TID, @Num, @TypeID, @Raw)", connection);
 
-                        try
-                        {
-                            var insertParagraph = new SqlCommand(@"
-                                INSERT INTO Articles_Paragraphs
-                                (Translation_ID, Paragraph_Number, Content_Type_ID, Paragraph_Raw)
-                                VALUES (@TID, @Num, @TypeID, @Raw)", connection);
+        //                    insertParagraph.Parameters.AddWithValue("@TID", translationId);
+        //                    insertParagraph.Parameters.AddWithValue("@Num", paragraphNumber++);
+        //                    insertParagraph.Parameters.AddWithValue("@TypeID", typeId);
+        //                    insertParagraph.Parameters.AddWithValue("@Raw", para.Raw);
 
-                            insertParagraph.Parameters.AddWithValue("@TID", translationId);
-                            insertParagraph.Parameters.AddWithValue("@Num", paragraphNumber++);
-                            insertParagraph.Parameters.AddWithValue("@TypeID", typeId);
-                            insertParagraph.Parameters.AddWithValue("@Raw", para.Raw);
+        //                    insertParagraph.ExecuteNonQuery();
+        //                }
+        //                catch (Exception ex)
+        //                {
+        //                    Logger.Log($"❌ Insert failed at Content_ID {contentId}, Paragraph {paragraphNumber - 1}");
+        //                    Logger.Log($"TypeID: {typeId}, Text: {trimmedText.Substring(0, Math.Min(100, trimmedText.Length))}");
+        //                    Logger.Log("Error: " + ex.Message);
+        //                }
+        //            }
 
-                            insertParagraph.ExecuteNonQuery();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log($"❌ Insert failed at Content_ID {contentId}, Paragraph {paragraphNumber - 1}");
-                            Logger.Log($"TypeID: {typeId}, Text: {trimmedText.Substring(0, Math.Min(100, trimmedText.Length))}");
-                            Logger.Log("Error: " + ex.Message);
-                        }
-                    }
-
-                    totalImported++;
-                }
-                UpdateSeparatorLines(connection);
-                UpdateParagraphCounts(connection);
-                UpdateTranslatedTitles(connection);
-            }
-            Logger.Log($"Paragraph import complete. {totalImported} article(s) processed.");
-        }
+        //            totalImported++;
+        //        }
+        //        //UpdateSeparatorLines(connection);
+        //        //UpdateParagraphCounts(connection);
+        //        //UpdateTranslatedTitles(connection);
+        //    }
+        //    Logger.Log($"Paragraph import complete. {totalImported} article(s) processed.");
+        //}
 
         public static List<int> ImportAll()
         {
-            List<int> updatedArticleIds = new List<int>();
+            var updatedArticleIds = new List<int>();
 
-            // Retrieve articles that need to be imported or updated
-            var articlesToProcess = GetArticlesToProcess(); // Implement this method based on your logic
+            var articlesToProcess = GetArticlesToProcess(); // You already have this
 
             foreach (var article in articlesToProcess)
             {
-                bool isUpdated = ImportArticle(article); // Implement this method to handle the import logic
+                if (string.IsNullOrWhiteSpace(article.Post_Content))
+                {
+                    Logger.Log($"⚠️ Article_ID {article.Id} has empty content. Skipping.");
+                    continue;
+                }
 
-                if (isUpdated)
+                int newContentId = ImportArticle(article.Id, article.Post_Content);
+
+                if (newContentId > 0)
                 {
                     updatedArticleIds.Add(article.Id);
                 }
@@ -137,6 +131,7 @@ namespace FFAWMT.Services
 
             return updatedArticleIds;
         }
+
         private static List<Article> GetArticlesToProcess()
         {
             var articles = new List<Article>();
@@ -144,14 +139,30 @@ namespace FFAWMT.Services
             using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
             connection.Open();
 
-            var cmd = new SqlCommand("SELECT Article_ID, Article_Name FROM Articles WHERE Active = 1", connection);
-            using var reader = cmd.ExecuteReader();
+            var command = new SqlCommand(@"
+        WITH LatestContent AS (
+            SELECT ac.*
+            FROM Articles_Contents ac
+            JOIN (
+                SELECT Article_ID, MAX(Content_ID) AS MaxContentID
+                FROM Articles_Contents
+                GROUP BY Article_ID
+            ) latest ON ac.Article_ID = latest.Article_ID AND ac.Content_ID = latest.MaxContentID
+        )
+        SELECT a.Article_ID, at.Title_Translated, lc.Post_Content
+        FROM Articles a
+        JOIN LatestContent lc ON a.Article_ID = lc.Article_ID
+        JOIN Articles_Translations at ON at.Content_ID = lc.Content_ID
+        WHERE a.WordPress_Last_Modified > ISNULL(a.Last_Modified, '1900-01-01')", connection);
+
+            using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 articles.Add(new Article
                 {
                     Id = reader.GetInt32(0),
-                    Title = reader.GetString(1)
+                    Title = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                    Post_Content = reader.IsDBNull(2) ? "" : reader.GetString(2)
                 });
             }
 
@@ -218,152 +229,174 @@ namespace FFAWMT.Services
             return true;
         }
 
-        private static bool ImportArticle(Article article)
+        public static int ImportArticle(int articleId, string postContentHtml)
         {
             using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
             connection.Open();
 
-            var cmd = new SqlCommand(@"
-        SELECT COUNT(*) 
-        FROM Articles_Translations t
-        JOIN Articles_Contents c ON t.Content_ID = c.Content_ID
-        WHERE c.Article_ID = @ArticleID AND t.Language_ID = 1", connection);
-            cmd.Parameters.AddWithValue("@ArticleID", article.Id);
+            Logger.Log($"📥 Importing Article_ID {articleId}");
 
-            int count = (int)cmd.ExecuteScalar();
-            if (count > 0)
-                return false;
+            // 1. Insert new Articles_Contents
+            var insertContentCmd = new SqlCommand(@"
+        INSERT INTO Articles_Contents (Article_ID, Post_Content, Created_Date)
+        OUTPUT INSERTED.Content_ID
+        VALUES (@ArticleID, @Content, GETDATE())", connection);
 
-            //Logger.Log($"Importing article: {article.Id} - {article.Title}");
+            insertContentCmd.Parameters.AddWithValue("@ArticleID", articleId);
+            insertContentCmd.Parameters.AddWithValue("@Content", postContentHtml);
+            int contentId = Convert.ToInt32(insertContentCmd.ExecuteScalar());
 
-            // 🧠 Only return true if actual import succeeded
-            return ImportHtmlParagraphs(article.Id, connection);
+            Logger.Log($"📄 Inserted new content record: Content_ID = {contentId}");
+
+            // 2. Load all active languages
+            var languages = new List<int>();
+            var getLanguagesCmd = new SqlCommand("SELECT Language_ID FROM Languages WHERE Active = 1", connection);
+            using (var reader = getLanguagesCmd.ExecuteReader())
+            {
+                while (reader.Read())
+                    languages.Add(reader.GetInt32(0));
+            }
+
+            // 3. Insert translations for all languages (for this content)
+            int insertedCount = 0;
+            foreach (int languageId in languages)
+            {
+                // Check if translation already exists for this Content_ID + Language_ID
+                var checkCmd = new SqlCommand(@"
+            SELECT COUNT(*) FROM Articles_Translations
+            WHERE Content_ID = @ContentID AND Language_ID = @LangID", connection);
+
+                checkCmd.Parameters.AddWithValue("@ContentID", contentId);
+                checkCmd.Parameters.AddWithValue("@LangID", languageId);
+                int existing = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+                if (existing == 0)
+                {
+                    var insertTranslationCmd = new SqlCommand(@"
+                INSERT INTO Articles_Translations (Content_ID, Language_ID, Paragraph_Count)
+                VALUES (@ContentID, @LangID, 0)", connection);
+
+                    insertTranslationCmd.Parameters.AddWithValue("@ContentID", contentId);
+                    insertTranslationCmd.Parameters.AddWithValue("@LangID", languageId);
+                    insertTranslationCmd.ExecuteNonQuery();
+                    insertedCount++;
+                }
+            }
+
+            Logger.Log($"🌐 {insertedCount} translation records created for Content_ID {contentId}.");
+
+            return contentId;
         }
-
 
         private class Article
         {
             public int Id { get; set; }
             public string Title { get; set; }
+            public string Post_Content { get; set; } // Add this to support re-import
         }
 
-        public static void UpdateTranslatedTitles(SqlConnection connection)
+        public static int UpdateEnglishTitlesInArticlesTranslations()
         {
-            Logger.Log("Updating translated titles...");
+            Logger.Log("Updating English titles in Articles_Translations...");
 
-            var cmd = new SqlCommand(@"
-                UPDATE t
-                SET Translated_Title = a.Article_Name
-                FROM Articles_Translations t
-                JOIN Articles_Contents c ON t.Content_ID = c.Content_ID
-                JOIN Articles a ON c.Article_ID = a.Article_ID
-                WHERE t.Language_ID = 1
-                  AND (t.Translated_Title IS NULL OR t.Translated_Title = '');
-                ", connection);
-
-            int updated = cmd.ExecuteNonQuery();
-            Logger.Log($"✔️ Updated translated titles for {updated} English translations.");
-        }
-
-        public static void UpdateParagraphCounts(SqlConnection connection)
-        {
-            Logger.Log("Updating paragraph counts...");
-
-            var cmd = new SqlCommand(@"
-                UPDATE t
-                SET Paragraph_Count = p.ParaCount
-                FROM Articles_Translations t
-                JOIN (
-                    SELECT p.Translation_ID, COUNT(*) AS ParaCount
-                    FROM Articles_Paragraphs p
-                    JOIN Articles_Translations t2 ON p.Translation_ID = t2.Translation_ID
-                    WHERE t2.Language_ID = 1
-                    GROUP BY p.Translation_ID
-                ) p ON t.Translation_ID = p.Translation_ID
-                WHERE t.Language_ID = 1;
-                ", connection);
-
-            int updated = cmd.ExecuteNonQuery();
-            Logger.Log($"✔️ Updated paragraph counts for {updated} English translations.");
-        }
-
-        public static int UpdateSeparatorParagraphs()
-        {
             using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
             {
                 connection.Open();
                 var command = new SqlCommand(@"
-            UPDATE Articles_Paragraphs
-            SET Paragraph_Text = '~~~'
-            WHERE Content_Type_ID = 5 AND ISNULL(Paragraph_Text, '') <> '~~~'", connection);
+                    UPDATE t
+                    SET Translated_Title = a.Article_Name
+                    FROM Articles_Translations t
+                    JOIN Articles_Contents c ON t.Content_ID = c.Content_ID
+                    JOIN Articles a ON c.Article_ID = a.Article_ID
+                    WHERE t.Language_ID = 1 AND (t.Translated_Title IS NULL OR t.Translated_Title = '');", connection);
                 int rows = command.ExecuteNonQuery();
+
+                Logger.Log($"✔️ Updated {rows} English titles in Articles_Translations...");
+
                 return rows;
             }
         }
 
-
-        public static int UpdateParagraphCounts()
+        public static int UpdateEnglishParagraphCountsInArticlesTranslations()
         {
             using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
             {
                 connection.Open();
-                var command = new SqlCommand(@"
-            UPDATE a
-            SET a.Paragraph_Count = p.ParagraphTotal
-            FROM Articles a
-            JOIN (
-                SELECT Article_ID, COUNT(*) AS ParagraphTotal
-                FROM Articles_Paragraphs
-                GROUP BY Article_ID
-            ) p ON a.Article_ID = p.Article_ID
-            WHERE ISNULL(a.Paragraph_Count, -1) <> p.ParagraphTotal", connection);
-                int rows = command.ExecuteNonQuery();
-                return rows;
+                int totalUpdated = 0;
+
+                // Update article translation paragraph counts
+                Logger.Log("Updating paragraph counts for article translations...");
+                var cmd1 = new SqlCommand(@"
+                    UPDATE t
+                    SET Paragraph_Count = p.ParaCount
+                    FROM Articles_Translations t
+                    JOIN (
+                        SELECT p.Translation_ID, COUNT(*) AS ParaCount
+                        FROM Articles_Paragraphs p
+                        JOIN Articles_Translations t2 ON p.Translation_ID = t2.Translation_ID
+                        WHERE t2.Language_ID = 1
+                        GROUP BY p.Translation_ID
+                    ) p ON t.Translation_ID = p.Translation_ID
+                    WHERE t.Language_ID = 1", connection);
+
+                int updatedTranslations = cmd1.ExecuteNonQuery();
+                Logger.Log($"✔️ Updated paragraph counts for {updatedTranslations} English translations.");
+                totalUpdated += updatedTranslations;
+
+                return totalUpdated;
             }
         }
 
-
-        public static int UpdateTranslatedTitles()
+        public static int UpdateCleanAndTextForSeparatorLines()
         {
+            Logger.Log("Updating Paragraph_Clean and Paragraph_Text for Separator Lines in Articles_Paragraphs...");
+
             using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
             {
                 connection.Open();
                 var command = new SqlCommand(@"
-            UPDATE apt
-            SET apt.Translated_Title = a.Article_Title
-            FROM Articles_Paragraphs_Translated apt
-            JOIN Articles a ON apt.Article_ID = a.Article_ID
-            WHERE ISNULL(apt.Translated_Title, '') <> ISNULL(a.Article_Title, '')", connection);
+                    UPDATE Articles_Paragraphs
+                    SET Paragraph_Clean = '~~~', Paragraph_Text = '~~~'
+                    WHERE LTRIM(RTRIM(Paragraph_Raw)) LIKE '%~~~%'
+                    ", connection);
+
                 int rows = command.ExecuteNonQuery();
+
+                Logger.Log($"✔️ Updated {rows} Paragraph_Clean and Paragraph_Text for Separator Lines in Articles_Paragraphs.");
+
                 return rows;
             }
         }
 
-
-        public static void UpdateSeparatorLines(SqlConnection connection)
+        public static int UpdateEnglishSeparatorParagraphNumber()
         {
-            Logger.Log("Updating separator paragraph numbers (~~~)...");
+            Logger.Log("Updating English separator paragraph number positions (~~~)...");
 
-            // First, get all Translation_IDs for English articles
-            var cmd = new SqlCommand(@"
-                UPDATE t
-                SET Separator_Paragraph_Number = m.Separator_Paragraph_Number
-                FROM Articles_Translations t
-                JOIN (
-                    SELECT
-                        p.Translation_ID,
-                        MIN(p.Paragraph_Number) AS Separator_Paragraph_Number
-                    FROM Articles_Paragraphs p
-                    JOIN Articles_Translations t2 ON p.Translation_ID = t2.Translation_ID
-                    WHERE t2.Language_ID = 1
-                      AND LTRIM(RTRIM(p.Paragraph_Raw)) LIKE '%~~~%'
-                    GROUP BY p.Translation_ID
-                ) m ON t.Translation_ID = m.Translation_ID
-                WHERE t.Language_ID = 1;
-                ", connection);
+            using (var connection1 = new SqlConnection(AppConfig.Current.SqlConnectionString))
+            {
+                connection1.Open();
+                var command1 = new SqlCommand(@"
+                    UPDATE t
+                    SET Separator_Paragraph_Number = m.Separator_Paragraph_Number
+                    FROM Articles_Translations t
+                    JOIN (
+                        SELECT
+                            p.Translation_ID,
+                            MIN(p.Paragraph_Number) AS Separator_Paragraph_Number
+                        FROM Articles_Paragraphs p
+                        JOIN Articles_Translations t2 ON p.Translation_ID = t2.Translation_ID
+                        WHERE t2.Language_ID = 1
+                          AND LTRIM(RTRIM(p.Paragraph_Raw)) LIKE '%~~~%'
+                        GROUP BY p.Translation_ID
+                    ) m ON t.Translation_ID = m.Translation_ID
+                    WHERE t.Language_ID = 1;", connection1);
 
-            int updated = cmd.ExecuteNonQuery();
-            Logger.Log($"✔️ Updated separator lines for {updated} English translations.");
+                int rows = command1.ExecuteNonQuery();
+
+                Logger.Log($"✔️ Updated {rows} English separator paragraph number positions (~~~).");
+
+                return rows;
+            }
         }
 
         private static List<ParagraphBlock> ExtractParagraphs(string html)

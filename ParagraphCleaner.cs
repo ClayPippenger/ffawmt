@@ -112,7 +112,11 @@ namespace FFAWMT.Services
             }
 
             using var reader = selectCmd.ExecuteReader();
+
             var updates = new List<(int ParagraphID, string Raw, string Cleaned, string TextOnly, int? TypeID)>();
+
+            var ruleHitCounts = rules.ToDictionary(r => r.RuleName, _ => 0); // track rule matches
+
             var firstH6Seen = new HashSet<int>(); // For Rule: General H6 Title
 
             while (reader.Read())
@@ -137,6 +141,8 @@ namespace FFAWMT.Services
                         : Regex.IsMatch(raw, rule.MatchValue, RegexOptions.IgnoreCase);
 
                     if (!matched) continue;
+
+                    ruleHitCounts[rule.RuleName]++; // count matches
 
                     if (rule.RuleName == "General H6 Title" || rule.RuleName == "Sub Title (H6)")
                     {
@@ -198,6 +204,18 @@ namespace FFAWMT.Services
                     updateCmd.Parameters.AddWithValue("@TypeID", typeId.Value);
 
                 updateCmd.ExecuteNonQuery();
+            }
+
+            Logger.Log("🔍 Match summary for cleaning rules:");
+            foreach (var kvp in ruleHitCounts.OrderBy(r => r.Key))
+            {
+                var ruleName = kvp.Key;
+                var matchCount = kvp.Value;
+
+                if (matchCount > 0)
+                    Logger.Log($"✔️ Rule '{ruleName}' matched {matchCount} paragraph(s).");
+                else
+                    Logger.Log($"⚠️ Rule '{ruleName}' matched no paragraphs.");
             }
 
             Logger.Log("Paragraph cleaning complete.");

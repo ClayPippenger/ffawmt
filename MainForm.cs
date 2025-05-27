@@ -78,32 +78,34 @@ namespace FFAWMT
             if (updatedArticleIds.Count > 0)
             {
                 Logger.Log($"✔️ Paragraphs updated for {updatedArticleIds.Count} article(s).");
-
-                Logger.Log("Running Base Rules...");
-
-                Logger.Log("Updating separator paragraph numbers (~~~)...");
-                int updatedSeparators = ParagraphImporter.UpdateSeparatorParagraphs();
-                Logger.Log(updatedSeparators > 0
-                    ? $"✔️ Updated {updatedSeparators} separator lines."
-                    : "✔️ No separator lines needed updating.");
-
-                Logger.Log("Updating paragraph counts...");
-                int updatedCounts = ParagraphImporter.UpdateParagraphCounts();
-                Logger.Log(updatedCounts > 0
-                    ? $"✔️ Updated {updatedCounts} paragraph counts."
-                    : "✔️ No paragraph counts needed updating.");
-
-                Logger.Log("Updating translated titles...");
-                int updatedTitles = ParagraphImporter.UpdateTranslatedTitles();
-                Logger.Log(updatedTitles > 0
-                    ? $"✔️ Updated {updatedTitles} translated titles."
-                    : "✔️ No translated titles needed updating.");
-
             }
             else
             {
                 Logger.Log("No articles needed re-importing. Skipping post-import updates.");
             }
+
+            Logger.Log("Running Base Rules...");
+
+            int updatedSLines = ParagraphImporter.UpdateCleanAndTextForSeparatorLines();
+            if (updatedSLines < 1) Logger.Log("✔️ No Separator Lines found.");
+
+            Logger.Log("Updating English separator paragraph number positions (~~~)...");
+            int updatedSeparators = ParagraphImporter.UpdateEnglishSeparatorParagraphNumber();
+            Logger.Log(updatedSeparators > 0
+                ? $"✔️ Updated {updatedSeparators} English separator paragraph number positions (~~~)."
+                : "✔️ No English separator paragraph number positions (~~~) needed updating.");
+
+            Logger.Log("Updating English paragraph counts for Article_Translations...");
+            int updatedCounts = ParagraphImporter.UpdateEnglishParagraphCountsInArticlesTranslations();
+            Logger.Log(updatedCounts > 0
+                ? $"✔️ Updated {updatedCounts} English paragraph counts for Article_Translations."
+                : "✔️ No English paragraph counts for Article_Translations needed updating.");
+
+            Logger.Log("Updating English titles for Article_Translations...");
+            int updatedTitles = ParagraphImporter.UpdateEnglishTitlesInArticlesTranslations();
+            Logger.Log(updatedTitles > 0
+                ? $"✔️ Updated {updatedTitles} English titles for Article_Translations."
+                : "✔️ No English titles in Articles_Translations needed updating.");
 
             Logger.Log("[Complete] Breakout HTML Into Paragraphs");
         }
@@ -142,33 +144,35 @@ namespace FFAWMT
                 if (updatedArticleIds.Count > 0)
                 {
                     Logger.Log($"✔️ Paragraphs updated for {updatedArticleIds.Count} article(s).");
-
-                    Logger.Log("Running Base Rules...");
-
-                    Logger.Log("Updating separator paragraph numbers (~~~)...");
-                    int updatedSeparators = ParagraphImporter.UpdateSeparatorParagraphs();
-                    Logger.Log(updatedSeparators > 0
-                        ? $"✔️ Updated {updatedSeparators} separator lines."
-                        : "✔️ No separator lines needed updating.");
-
-                    Logger.Log("Updating paragraph counts...");
-                    int updatedCounts = ParagraphImporter.UpdateParagraphCounts();
-                    Logger.Log(updatedCounts > 0
-                        ? $"✔️ Updated {updatedCounts} paragraph counts."
-                        : "✔️ No paragraph counts needed updating.");
-
-                    Logger.Log("Updating translated titles...");
-                    int updatedTitles = ParagraphImporter.UpdateTranslatedTitles();
-                    Logger.Log(updatedTitles > 0
-                        ? $"✔️ Updated {updatedTitles} translated titles."
-                        : "✔️ No translated titles needed updating.");
-
                 }
                 else
                 {
                     Logger.Log("No articles needed re-importing. Skipping post-import updates.");
                 }
 
+                Logger.Log("Running Base Rules...");
+
+                int updatedSLines = ParagraphImporter.UpdateCleanAndTextForSeparatorLines();
+                if (updatedSLines < 1) Logger.Log("✔️ No Separator Lines found.");
+
+                Logger.Log("Updating English separator paragraph number positions (~~~)...");
+                int updatedSeparators = ParagraphImporter.UpdateEnglishSeparatorParagraphNumber();
+                Logger.Log(updatedSeparators > 0
+                    ? $"✔️ Updated {updatedSeparators} English separator paragraph number positions (~~~)."
+                    : "✔️ No English separator paragraph number positions (~~~) needed updating.");
+
+                Logger.Log("Updating English paragraph counts for Article_Translations...");
+                int updatedCounts = ParagraphImporter.UpdateEnglishParagraphCountsInArticlesTranslations();
+                Logger.Log(updatedCounts > 0
+                    ? $"✔️ Updated {updatedCounts} English paragraph counts for Article_Translations."
+                    : "✔️ No English paragraph counts for Article_Translations needed updating.");
+
+                Logger.Log("Updating English titles for Article_Translations...");
+                int updatedTitles = ParagraphImporter.UpdateEnglishTitlesInArticlesTranslations();
+                Logger.Log(updatedTitles > 0
+                    ? $"✔️ Updated {updatedTitles} English titles for Article_Translations."
+                    : "✔️ No English titles in Articles_Translations needed updating.");
+                
                 Logger.Log("[Complete] Breakout HTML Into Paragraphs");
 
                 // C
