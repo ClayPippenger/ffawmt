@@ -31,81 +31,115 @@
 
         private void InitializeComponent()
         {
-            this.txtConsole = new System.Windows.Forms.TextBox();
-            this.panelButtons = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnSyncWordPress = new System.Windows.Forms.Button();
-            this.btnImportParagraphs = new System.Windows.Forms.Button();
-            this.btnCleanParagraphs = new System.Windows.Forms.Button();
-            this.btnFullReset = new System.Windows.Forms.Button();
-            this.btnCreateMp3 = new System.Windows.Forms.Button();
-            this.btnExit = new System.Windows.Forms.Button();
-
-            // 
-            // MainForm
-            // 
-            this.Text = "FFA Translation Utility";
-            this.ClientSize = new System.Drawing.Size(1000, 600);
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Load += new System.EventHandler(this.MainForm_Load);
-
-            // 
-            // panelButtons
-            // 
-            this.panelButtons.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panelButtons.Height = 60;
-            this.panelButtons.AutoSize = true;
-            this.panelButtons.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.panelButtons.WrapContents = false;
-            this.panelButtons.Padding = new System.Windows.Forms.Padding(5);
-
+            txtConsole = new System.Windows.Forms.TextBox();
+            panelButtons = new System.Windows.Forms.FlowLayoutPanel();
+            btnSyncWordPress = new System.Windows.Forms.Button();
+            btnImportParagraphs = new System.Windows.Forms.Button();
+            btnCleanParagraphs = new System.Windows.Forms.Button();
+            btnFullReset = new System.Windows.Forms.Button();
+            btnCreateMp3 = new System.Windows.Forms.Button();
+            btnExit = new System.Windows.Forms.Button();
+            panelButtons.SuspendLayout();
+            SuspendLayout();
             // 
             // txtConsole
             // 
-            this.txtConsole.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtConsole.Multiline = true;
-            this.txtConsole.ReadOnly = true;
-            this.txtConsole.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtConsole.Font = new System.Drawing.Font("Consolas", 10F);
-            this.txtConsole.BackColor = System.Drawing.Color.Black;
-            this.txtConsole.ForeColor = System.Drawing.Color.LightGreen;
-            this.txtConsole.WordWrap = false;
-
+            txtConsole.BackColor = System.Drawing.Color.Black;
+            txtConsole.Dock = System.Windows.Forms.DockStyle.Fill;
+            txtConsole.Font = new System.Drawing.Font("Consolas", 10F);
+            txtConsole.ForeColor = System.Drawing.Color.LightGreen;
+            txtConsole.Location = new System.Drawing.Point(0, 39);
+            txtConsole.Multiline = true;
+            txtConsole.Name = "txtConsole";
+            txtConsole.ReadOnly = true;
+            txtConsole.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            txtConsole.Size = new System.Drawing.Size(1000, 561);
+            txtConsole.TabIndex = 0;
+            txtConsole.WordWrap = false;
             // 
-            // Buttons
+            // panelButtons
             // 
-            this.btnSyncWordPress.Text = "1. Sync WordPress Metadata";
-            this.btnSyncWordPress.Click += new System.EventHandler(this.btnSyncWordPress_Click);
-
-            this.btnImportParagraphs.Text = "2. Import Article Paragraphs";
-            this.btnImportParagraphs.Click += new System.EventHandler(this.btnImportParagraphs_Click);
-
-            this.btnCleanParagraphs.Text = "C. Clean Paragraphs";
-            this.btnCleanParagraphs.Click += new System.EventHandler(this.btnCleanParagraphs_Click);
-
-            this.btnFullReset.Text = "3. Full Reset (1→2→C)";
-            this.btnFullReset.Click += new System.EventHandler(this.btnFullReset_Click);
-
-            this.btnCreateMp3.Text = "4. Create MP3s (English)";
-            this.btnCreateMp3.Click += new System.EventHandler(this.btnCreateMp3_Click);
-
-            this.btnExit.Text = "X. Exit";
-            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
-
+            panelButtons.AutoSize = true;
+            panelButtons.Controls.Add(btnSyncWordPress);
+            panelButtons.Controls.Add(btnImportParagraphs);
+            panelButtons.Controls.Add(btnCleanParagraphs);
+            panelButtons.Controls.Add(btnFullReset);
+            panelButtons.Controls.Add(btnCreateMp3);
+            panelButtons.Controls.Add(btnExit);
+            panelButtons.Dock = System.Windows.Forms.DockStyle.Top;
+            panelButtons.Location = new System.Drawing.Point(0, 0);
+            panelButtons.Name = "panelButtons";
+            panelButtons.Padding = new System.Windows.Forms.Padding(5);
+            panelButtons.Size = new System.Drawing.Size(1000, 39);
+            panelButtons.TabIndex = 1;
+            panelButtons.WrapContents = false;
             // 
-            // Add controls to panel
+            // btnSyncWordPress
             // 
-            this.panelButtons.Controls.Add(this.btnSyncWordPress);
-            this.panelButtons.Controls.Add(this.btnImportParagraphs);
-            this.panelButtons.Controls.Add(this.btnCleanParagraphs);
-            this.panelButtons.Controls.Add(this.btnFullReset);
-            this.panelButtons.Controls.Add(this.btnCreateMp3);
-            this.panelButtons.Controls.Add(this.btnExit);
-
+            btnSyncWordPress.Location = new System.Drawing.Point(8, 8);
+            btnSyncWordPress.Name = "btnSyncWordPress";
+            btnSyncWordPress.Size = new System.Drawing.Size(196, 23);
+            btnSyncWordPress.TabIndex = 0;
+            btnSyncWordPress.Text = "Import WordPress Metadata";
+            btnSyncWordPress.Click += btnSyncWordPress_Click;
             // 
-            // Add to MainForm
+            // btnImportParagraphs
             // 
-            this.Controls.Add(this.txtConsole);
-            this.Controls.Add(this.panelButtons);
+            btnImportParagraphs.Location = new System.Drawing.Point(210, 8);
+            btnImportParagraphs.Name = "btnImportParagraphs";
+            btnImportParagraphs.Size = new System.Drawing.Size(227, 23);
+            btnImportParagraphs.TabIndex = 1;
+            btnImportParagraphs.Text = "Breakout HTML Into Paragraphs";
+            btnImportParagraphs.Click += btnImportParagraphs_Click;
+            // 
+            // btnCleanParagraphs
+            // 
+            btnCleanParagraphs.Location = new System.Drawing.Point(443, 8);
+            btnCleanParagraphs.Name = "btnCleanParagraphs";
+            btnCleanParagraphs.Size = new System.Drawing.Size(75, 23);
+            btnCleanParagraphs.TabIndex = 2;
+            btnCleanParagraphs.Text = "C. Clean Paragraphs";
+            btnCleanParagraphs.Click += btnCleanParagraphs_Click;
+            // 
+            // btnFullReset
+            // 
+            btnFullReset.Location = new System.Drawing.Point(524, 8);
+            btnFullReset.Name = "btnFullReset";
+            btnFullReset.Size = new System.Drawing.Size(75, 23);
+            btnFullReset.TabIndex = 3;
+            btnFullReset.Text = "3. Full Reset (1→2→C)";
+            btnFullReset.Click += btnFullReset_Click;
+            // 
+            // btnCreateMp3
+            // 
+            btnCreateMp3.Location = new System.Drawing.Point(605, 8);
+            btnCreateMp3.Name = "btnCreateMp3";
+            btnCreateMp3.Size = new System.Drawing.Size(75, 23);
+            btnCreateMp3.TabIndex = 4;
+            btnCreateMp3.Text = "4. Create MP3s (English)";
+            btnCreateMp3.Click += btnCreateMp3_Click;
+            // 
+            // btnExit
+            // 
+            btnExit.Location = new System.Drawing.Point(686, 8);
+            btnExit.Name = "btnExit";
+            btnExit.Size = new System.Drawing.Size(75, 23);
+            btnExit.TabIndex = 5;
+            btnExit.Text = "X. Exit";
+            btnExit.Click += btnExit_Click;
+            // 
+            // MainForm
+            // 
+            ClientSize = new System.Drawing.Size(1000, 600);
+            Controls.Add(txtConsole);
+            Controls.Add(panelButtons);
+            Name = "MainForm";
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            Text = "FFA Translation Utility";
+            Load += MainForm_Load;
+            panelButtons.ResumeLayout(false);
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion

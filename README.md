@@ -96,6 +96,17 @@ This application was a console application first.  This section will be merged i
 | 9 | Rebuild language `[ShortCode]` JavaScript		| NOT WORKING		|
 | X | Exit application								| TESTED			|
 
+## 🧭 Features
+
+TODO - Moving to this list from the section above...
+
+| Feature | Status |
+|--------|------------------------------------------|-------------------|
+| Import WordPress Metadata							| TESTED 1.0		|
+| Breakout HTML Into Paragraphs						| TESTED 1.0		|
+|													|					|
+| Exit Application									| TESTED 1.1		|
+
 ---
 
 ## 🧠 Core Concepts
