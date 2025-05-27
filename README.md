@@ -101,7 +101,7 @@ This application was a console application first.  This section will be merged i
 TODO - Moving to this list from the section above...
 
 | Feature | Status |
-|--------|------------------------------------------|-------------------|
+|---------------------------------------------------|-------------------|
 | Import WordPress Metadata							| TESTED 1.0		|
 | Breakout HTML Into Paragraphs						| TESTED 1.0		|
 |													|					|
