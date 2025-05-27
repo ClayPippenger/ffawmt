@@ -93,7 +93,7 @@ namespace FFAWMT.Data
                             }
                             else
                             {
-                                Logger.Log($"No update needed for: {slug}");
+                                //Logger.Log($"No update needed for: {slug}");
                             }
 
                             break;

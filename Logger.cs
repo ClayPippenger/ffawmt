@@ -18,7 +18,7 @@ public static class Logger
             _logToUI = uiLogger;
         }
 
-        Log("Logger initialized.");
+        Log("### Log Init ###");
     }
 
     // Overload for updating just the UI logger
@@ -40,7 +40,7 @@ public static class Logger
 
     public static void Close()
     {
-        Log("Logger closing.");
+        Log("### Log Close ###");
         _logFile?.Close();
     }
 }

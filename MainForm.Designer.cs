@@ -53,7 +53,7 @@
             txtConsole.Name = "txtConsole";
             txtConsole.ReadOnly = true;
             txtConsole.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            txtConsole.Size = new System.Drawing.Size(1159, 561);
+            txtConsole.Size = new System.Drawing.Size(1243, 561);
             txtConsole.TabIndex = 0;
             txtConsole.WordWrap = false;
             // 
@@ -70,7 +70,7 @@
             panelButtons.Location = new System.Drawing.Point(0, 0);
             panelButtons.Name = "panelButtons";
             panelButtons.Padding = new System.Windows.Forms.Padding(5);
-            panelButtons.Size = new System.Drawing.Size(1159, 39);
+            panelButtons.Size = new System.Drawing.Size(1243, 39);
             panelButtons.TabIndex = 1;
             panelButtons.WrapContents = false;
             // 
@@ -130,7 +130,7 @@
             // 
             // MainForm
             // 
-            ClientSize = new System.Drawing.Size(1159, 600);
+            ClientSize = new System.Drawing.Size(1243, 600);
             Controls.Add(txtConsole);
             Controls.Add(panelButtons);
             Name = "MainForm";

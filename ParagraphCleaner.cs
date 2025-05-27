@@ -85,7 +85,7 @@ namespace FFAWMT.Services
 
         public static void Run()
         {
-            Logger.Log("Starting paragraph clean and text extraction process...");
+            Logger.Log("[Action] Starting paragraph clean and text extraction process...");
 
             using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
             connection.Open();

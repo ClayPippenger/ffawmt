@@ -33,7 +33,7 @@ namespace FFAWMT.Services
 
         public static void Run()
         {
-            Logger.Log("Starting paragraph import process...");
+            Logger.Log("[Action] Starting paragraph import process...");
             int totalImported = 0;
 
             using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
@@ -178,7 +178,7 @@ namespace FFAWMT.Services
                 }
                 else
                 {
-                    Logger.Log($"❌ Could not find content for Article_ID {articleId}");
+                    //Logger.Log($"❌ Could not find content for Article_ID {articleId}");
                     return false;
                 }
             }
@@ -234,7 +234,7 @@ namespace FFAWMT.Services
             if (count > 0)
                 return false;
 
-            Logger.Log($"Importing article: {article.Id} - {article.Title}");
+            //Logger.Log($"Importing article: {article.Id} - {article.Title}");
 
             // 🧠 Only return true if actual import succeeded
             return ImportHtmlParagraphs(article.Id, connection);

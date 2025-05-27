@@ -23,9 +23,7 @@ namespace FFAWMT
             try
             {
                 Logger.Init(AppendLogMessage);
-                Logger.Log("[INIT] AppConfig loaded.");
-                Logger.Log("FFA Translation Utility Started...");
-                Logger.Log("Select an action using the buttons above.");
+                Logger.Log("### FFA Website Management Tool ###");
             }
             catch (Exception ex)
             {
@@ -61,9 +59,9 @@ namespace FFAWMT
         {
             try
             {
-                Logger.Log("[Action] Syncing WordPress metadata...");
+                Logger.Log("[Begin] Import WordPress Metadata");
                 await WordPressAPIManager.SyncWordPressMetadataAsync();
-                Logger.Log("[Done] Sync complete.");
+                Logger.Log("[Complete] Import WordPress Metadata");
             }
             catch (Exception ex)
             {
@@ -73,14 +71,15 @@ namespace FFAWMT
 
         private void btnImportParagraphs_Click(object sender, EventArgs e)
         {
-            Logger.Log("[Action] Importing article paragraphs...");
-            Logger.Log("Starting paragraph import process...");
+            Logger.Log("[Begin] Breakout HTML Into Paragraphs");
 
             List<int> updatedArticleIds = ParagraphImporter.ImportAll();
 
             if (updatedArticleIds.Count > 0)
             {
                 Logger.Log($"✔️ Paragraphs updated for {updatedArticleIds.Count} article(s).");
+
+                Logger.Log("Running Base Rules...");
 
                 Logger.Log("Updating separator paragraph numbers (~~~)...");
                 ParagraphImporter.UpdateSeparatorParagraphs();
@@ -99,7 +98,7 @@ namespace FFAWMT
                 Logger.Log("No articles needed re-importing. Skipping post-import updates.");
             }
 
-            Logger.Log("[Done] Paragraph import complete.");
+            Logger.Log("[Complete] Breakout HTML Into Paragraphs");
         }
 
 
@@ -107,9 +106,9 @@ namespace FFAWMT
         {
             try
             {
-                Logger.Log("[Action] Cleaning article paragraphs...");
+                Logger.Log("[Begin] Process Paragraph Clean Rules");
                 ParagraphCleaner.Run();
-                Logger.Log("[Done] Paragraph cleaning complete.");
+                Logger.Log("[Complete] Process Paragraph Clean Rules");
             }
             catch (Exception ex)
             {
@@ -121,11 +120,12 @@ namespace FFAWMT
         {
             try
             {
-                Logger.Log("[Action] Performing full reset...");
+                Logger.Log("[Begin] FIRST 3 STEPS");
+                // TODO - I think this is not working the same as doing them individually
                 await WordPressAPIManager.SyncWordPressMetadataAsync();
                 ParagraphImporter.Run();
                 ParagraphCleaner.Run();
-                Logger.Log("[Done] Full reset complete.");
+                Logger.Log("[Complete] FIRST 3 STEPS");
             }
             catch (Exception ex)
             {
@@ -137,9 +137,9 @@ namespace FFAWMT
         {
             try
             {
-                Logger.Log("[Action] Creating MP3 files for English paragraphs...");
+                Logger.Log("[Begin] Create English MP3s");
                 Mp3Generator.Run();
-                Logger.Log("[Done] MP3 generation complete.");
+                Logger.Log("[Complete] Create English MP3s");
             }
             catch (Exception ex)
             {
@@ -149,8 +149,15 @@ namespace FFAWMT
 
         private void btnExit_Click(object sender, EventArgs e)
         {
-            Logger.Log("Exiting application...");
-            Application.Exit();
+            try
+            {
+                Logger.Log("### Application Exit ###");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("[ERROR] " + ex.Message);
+            }
         }
 
         private class TextBoxWriter : TextWriter
