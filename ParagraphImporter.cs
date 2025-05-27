@@ -287,26 +287,58 @@ namespace FFAWMT.Services
             Logger.Log($"✔️ Updated paragraph counts for {updated} English translations.");
         }
 
-        public static void UpdateSeparatorParagraphs()
+        public static int UpdateSeparatorParagraphs()
         {
-            using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
-            connection.Open();
-            UpdateSeparatorLines(connection);
+            using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"
+            UPDATE Articles_Paragraphs
+            SET Paragraph_Text = '~~~'
+            WHERE Content_Type_ID = 5 AND ISNULL(Paragraph_Text, '') <> '~~~'", connection);
+                int rows = command.ExecuteNonQuery();
+                return rows;
+            }
         }
 
-        public static void UpdateParagraphCounts()
+
+        public static int UpdateParagraphCounts()
         {
-            using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
-            connection.Open();
-            UpdateParagraphCounts(connection);
+            using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"
+            UPDATE a
+            SET a.Paragraph_Count = p.ParagraphTotal
+            FROM Articles a
+            JOIN (
+                SELECT Article_ID, COUNT(*) AS ParagraphTotal
+                FROM Articles_Paragraphs
+                GROUP BY Article_ID
+            ) p ON a.Article_ID = p.Article_ID
+            WHERE ISNULL(a.Paragraph_Count, -1) <> p.ParagraphTotal", connection);
+                int rows = command.ExecuteNonQuery();
+                return rows;
+            }
         }
 
-        public static void UpdateTranslatedTitles()
+
+        public static int UpdateTranslatedTitles()
         {
-            using var connection = new SqlConnection(AppConfig.Current.SqlConnectionString);
-            connection.Open();
-            UpdateTranslatedTitles(connection);
+            using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"
+            UPDATE apt
+            SET apt.Translated_Title = a.Article_Title
+            FROM Articles_Paragraphs_Translated apt
+            JOIN Articles a ON apt.Article_ID = a.Article_ID
+            WHERE ISNULL(apt.Translated_Title, '') <> ISNULL(a.Article_Title, '')", connection);
+                int rows = command.ExecuteNonQuery();
+                return rows;
+            }
         }
+
 
         public static void UpdateSeparatorLines(SqlConnection connection)
         {

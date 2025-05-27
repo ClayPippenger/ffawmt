@@ -82,16 +82,23 @@ namespace FFAWMT
                 Logger.Log("Running Base Rules...");
 
                 Logger.Log("Updating separator paragraph numbers (~~~)...");
-                ParagraphImporter.UpdateSeparatorParagraphs();
-                Logger.Log("✔️ Updated separator lines.");
+                int updatedSeparators = ParagraphImporter.UpdateSeparatorParagraphs();
+                Logger.Log(updatedSeparators > 0
+                    ? $"✔️ Updated {updatedSeparators} separator lines."
+                    : "✔️ No separator lines needed updating.");
 
                 Logger.Log("Updating paragraph counts...");
-                ParagraphImporter.UpdateParagraphCounts();
-                Logger.Log("✔️ Updated paragraph counts.");
+                int updatedCounts = ParagraphImporter.UpdateParagraphCounts();
+                Logger.Log(updatedCounts > 0
+                    ? $"✔️ Updated {updatedCounts} paragraph counts."
+                    : "✔️ No paragraph counts needed updating.");
 
                 Logger.Log("Updating translated titles...");
-                ParagraphImporter.UpdateTranslatedTitles();
-                Logger.Log("✔️ Updated translated titles.");
+                int updatedTitles = ParagraphImporter.UpdateTranslatedTitles();
+                Logger.Log(updatedTitles > 0
+                    ? $"✔️ Updated {updatedTitles} translated titles."
+                    : "✔️ No translated titles needed updating.");
+
             }
             else
             {
@@ -121,9 +128,54 @@ namespace FFAWMT
             try
             {
                 Logger.Log("[Begin] FIRST 3 STEPS");
+
+                // 1
+                Logger.Log("[Begin] Import WordPress Metadata");
                 await WordPressAPIManager.SyncWordPressMetadataAsync();
-                ParagraphImporter.Run();
+                Logger.Log("[Complete] Import WordPress Metadata");
+
+                // 2
+                Logger.Log("[Begin] Breakout HTML Into Paragraphs");
+
+                List<int> updatedArticleIds = ParagraphImporter.ImportAll();
+
+                if (updatedArticleIds.Count > 0)
+                {
+                    Logger.Log($"✔️ Paragraphs updated for {updatedArticleIds.Count} article(s).");
+
+                    Logger.Log("Running Base Rules...");
+
+                    Logger.Log("Updating separator paragraph numbers (~~~)...");
+                    int updatedSeparators = ParagraphImporter.UpdateSeparatorParagraphs();
+                    Logger.Log(updatedSeparators > 0
+                        ? $"✔️ Updated {updatedSeparators} separator lines."
+                        : "✔️ No separator lines needed updating.");
+
+                    Logger.Log("Updating paragraph counts...");
+                    int updatedCounts = ParagraphImporter.UpdateParagraphCounts();
+                    Logger.Log(updatedCounts > 0
+                        ? $"✔️ Updated {updatedCounts} paragraph counts."
+                        : "✔️ No paragraph counts needed updating.");
+
+                    Logger.Log("Updating translated titles...");
+                    int updatedTitles = ParagraphImporter.UpdateTranslatedTitles();
+                    Logger.Log(updatedTitles > 0
+                        ? $"✔️ Updated {updatedTitles} translated titles."
+                        : "✔️ No translated titles needed updating.");
+
+                }
+                else
+                {
+                    Logger.Log("No articles needed re-importing. Skipping post-import updates.");
+                }
+
+                Logger.Log("[Complete] Breakout HTML Into Paragraphs");
+
+                // C
+                Logger.Log("[Begin] Process Paragraph Clean Rules");
                 ParagraphCleaner.Run();
+                Logger.Log("[Complete] Process Paragraph Clean Rules");
+
                 Logger.Log("[Complete] FIRST 3 STEPS");
             }
             catch (Exception ex)
