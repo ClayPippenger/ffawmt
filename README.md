@@ -19,6 +19,16 @@ Key Goals:
 
 ---
 
+## 📌 Version History
+
+| Version | Comment |
+|-------|---------------------------------------------------|
+| 1.0 | Initial version (different platform/language)		|
+| 1.1 | Merged in existing working changes from C# codebase	|
+| 1.2 | |
+
+---
+
 ## 🧱 Project Structure
 
 ```
@@ -80,32 +90,17 @@ Example:
 
 ---
 
-## 🧭 Menu Options (Console or UI Buttons)
-
-This application was a console application first.  This section will be merged into a feature list later.
-
-| Option | Description | Status |
-|--------|------------------------------------------|-------------------|
-| 1 | Download WordPress metadata into SQL			| TESTED			|
-| 2 | Breakout article paragraphs from stored HTML	| TESTED			|
-| C | Clean paragraph records and apply types		| TESTED			|
-| 3 | Run Menu Items 1, 2, C						| TESTED			|
-| 4 | Generate MP3s (English)						| TODO TESTING MORE	|
-| 6 | Translate paragraphs							| NOT WORKING		|
-| 7 | Generate MP3s (Foreign)						| NOT WORKING		|
-| 9 | Rebuild language `[ShortCode]` JavaScript		| NOT WORKING		|
-| X | Exit application								| TESTED			|
-
 ## 🧭 Features
-
-TODO - Moving to this list from the section above...
 
 | Feature | Status |
 |---------------------------------------------------|-------------------|
 | Import WordPress Metadata							| TESTED 1.0		|
 | Breakout HTML Into Paragraphs						| TESTED 1.0		|
+| Process Paragraph Clean Rules						|					|
+| Run first 3 steps (old 1,2,C)						|					|
+| Create English MP3s								|					|
 |													|					|
-| Exit Application									| TESTED 1.1		|
+| EXIT Application									| TESTED 1.1		|
 
 ---
 
@@ -188,11 +183,12 @@ log_dir\FFA_yyyy-MM-dd_HHmmss.txt
 
 - Complete MP3 English testing
 - Translate paragraphs feature
-- Voice generation for translated paragraphs (Option 7)
+- Voice generation for translated foreign paragraphs
 - Grading and scoring translation accuracy using AI (ChatGPT verifier)
 - UI interface for reviewing and fixing bad translations
 - Side-by-side paragraph viewer with language switching
 - CLI support: `FFA.exe 1` (for use in Task Scheduler or scripts)
+- Rebuild language `[ShortCode]` JavaScript
 - Advanced translation engine comparison tools
 - Language Translation:
 	- Bible verse override logic for false-positives

@@ -53,7 +53,7 @@
             txtConsole.Name = "txtConsole";
             txtConsole.ReadOnly = true;
             txtConsole.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            txtConsole.Size = new System.Drawing.Size(1000, 561);
+            txtConsole.Size = new System.Drawing.Size(1159, 561);
             txtConsole.TabIndex = 0;
             txtConsole.WordWrap = false;
             // 
@@ -70,7 +70,7 @@
             panelButtons.Location = new System.Drawing.Point(0, 0);
             panelButtons.Name = "panelButtons";
             panelButtons.Padding = new System.Windows.Forms.Padding(5);
-            panelButtons.Size = new System.Drawing.Size(1000, 39);
+            panelButtons.Size = new System.Drawing.Size(1159, 39);
             panelButtons.TabIndex = 1;
             panelButtons.WrapContents = false;
             // 
@@ -78,59 +78,59 @@
             // 
             btnSyncWordPress.Location = new System.Drawing.Point(8, 8);
             btnSyncWordPress.Name = "btnSyncWordPress";
-            btnSyncWordPress.Size = new System.Drawing.Size(196, 23);
+            btnSyncWordPress.Size = new System.Drawing.Size(164, 23);
             btnSyncWordPress.TabIndex = 0;
             btnSyncWordPress.Text = "Import WordPress Metadata";
             btnSyncWordPress.Click += btnSyncWordPress_Click;
             // 
             // btnImportParagraphs
             // 
-            btnImportParagraphs.Location = new System.Drawing.Point(210, 8);
+            btnImportParagraphs.Location = new System.Drawing.Point(178, 8);
             btnImportParagraphs.Name = "btnImportParagraphs";
-            btnImportParagraphs.Size = new System.Drawing.Size(227, 23);
+            btnImportParagraphs.Size = new System.Drawing.Size(185, 23);
             btnImportParagraphs.TabIndex = 1;
             btnImportParagraphs.Text = "Breakout HTML Into Paragraphs";
             btnImportParagraphs.Click += btnImportParagraphs_Click;
             // 
             // btnCleanParagraphs
             // 
-            btnCleanParagraphs.Location = new System.Drawing.Point(443, 8);
+            btnCleanParagraphs.Location = new System.Drawing.Point(369, 8);
             btnCleanParagraphs.Name = "btnCleanParagraphs";
-            btnCleanParagraphs.Size = new System.Drawing.Size(75, 23);
+            btnCleanParagraphs.Size = new System.Drawing.Size(178, 23);
             btnCleanParagraphs.TabIndex = 2;
-            btnCleanParagraphs.Text = "C. Clean Paragraphs";
+            btnCleanParagraphs.Text = "Process Paragraph Clean Rules";
             btnCleanParagraphs.Click += btnCleanParagraphs_Click;
             // 
             // btnFullReset
             // 
-            btnFullReset.Location = new System.Drawing.Point(524, 8);
+            btnFullReset.Location = new System.Drawing.Point(553, 8);
             btnFullReset.Name = "btnFullReset";
-            btnFullReset.Size = new System.Drawing.Size(75, 23);
+            btnFullReset.Size = new System.Drawing.Size(179, 23);
             btnFullReset.TabIndex = 3;
-            btnFullReset.Text = "3. Full Reset (1→2→C)";
+            btnFullReset.Text = "Run first 3 steps (old 1→2→C)";
             btnFullReset.Click += btnFullReset_Click;
             // 
             // btnCreateMp3
             // 
-            btnCreateMp3.Location = new System.Drawing.Point(605, 8);
+            btnCreateMp3.Location = new System.Drawing.Point(738, 8);
             btnCreateMp3.Name = "btnCreateMp3";
-            btnCreateMp3.Size = new System.Drawing.Size(75, 23);
+            btnCreateMp3.Size = new System.Drawing.Size(124, 23);
             btnCreateMp3.TabIndex = 4;
-            btnCreateMp3.Text = "4. Create MP3s (English)";
+            btnCreateMp3.Text = "Create English MP3s";
             btnCreateMp3.Click += btnCreateMp3_Click;
             // 
             // btnExit
             // 
-            btnExit.Location = new System.Drawing.Point(686, 8);
+            btnExit.Location = new System.Drawing.Point(868, 8);
             btnExit.Name = "btnExit";
             btnExit.Size = new System.Drawing.Size(75, 23);
             btnExit.TabIndex = 5;
-            btnExit.Text = "X. Exit";
+            btnExit.Text = "EXIT";
             btnExit.Click += btnExit_Click;
             // 
             // MainForm
             // 
-            ClientSize = new System.Drawing.Size(1000, 600);
+            ClientSize = new System.Drawing.Size(1159, 600);
             Controls.Add(txtConsole);
             Controls.Add(panelButtons);
             Name = "MainForm";
