@@ -140,20 +140,14 @@ namespace FFAWMT.Services
             connection.Open();
 
             var command = new SqlCommand(@"
-        WITH LatestContent AS (
-            SELECT ac.*
-            FROM Articles_Contents ac
-            JOIN (
-                SELECT Article_ID, MAX(Content_ID) AS MaxContentID
-                FROM Articles_Contents
-                GROUP BY Article_ID
-            ) latest ON ac.Article_ID = latest.Article_ID AND ac.Content_ID = latest.MaxContentID
-        )
-        SELECT a.Article_ID, at.Title_Translated, lc.Post_Content
-        FROM Articles a
-        JOIN LatestContent lc ON a.Article_ID = lc.Article_ID
-        JOIN Articles_Translations at ON at.Content_ID = lc.Content_ID
-        WHERE a.WordPress_Last_Modified > ISNULL(a.Last_Modified, '1900-01-01')", connection);
+                SELECT 
+                    a.Article_ID,
+                    t.Translated_Title,
+                    c.Post_Content
+                FROM Articles a
+                JOIN Articles_Contents c ON a.Article_ID = c.Article_ID
+                JOIN Articles_Translations t ON t.Content_ID = c.Content_ID
+                ", connection);
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -167,66 +161,6 @@ namespace FFAWMT.Services
             }
 
             return articles;
-        }
-
-        private static bool ImportHtmlParagraphs(int articleId, SqlConnection connection)
-        {
-            var selectCmd = new SqlCommand(@"
-        SELECT Content_ID, Post_Content 
-        FROM Articles_Contents 
-        WHERE Article_ID = @ArticleID", connection);
-            selectCmd.Parameters.AddWithValue("@ArticleID", articleId);
-
-            int contentId = 0;
-            string html = "";
-
-            using (var reader = selectCmd.ExecuteReader())
-            {
-                if (reader.Read())
-                {
-                    contentId = reader.GetInt32(0);
-                    html = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                }
-                else
-                {
-                    //Logger.Log($"❌ Could not find content for Article_ID {articleId}");
-                    return false;
-                }
-            }
-
-            var paragraphs = ExtractParagraphs(html);
-
-            var insertTranslation = new SqlCommand(@"
-        INSERT INTO Articles_Translations (Content_ID, Language_ID)
-        OUTPUT INSERTED.Translation_ID
-        VALUES (@ContentID, 1)", connection);
-            insertTranslation.Parameters.AddWithValue("@ContentID", contentId);
-
-            int translationId = (int)insertTranslation.ExecuteScalar();
-
-            int paragraphNumber = 1;
-            foreach (var para in paragraphs)
-            {
-                string trimmedText = para.TextOnly.Trim();
-                int typeId = para.TypeID;
-
-                if (Regex.IsMatch(trimmedText, "^[\"\'‘’“”]"))
-                    typeId = GetTypeIdByName("Quote");
-
-                var insertParagraph = new SqlCommand(@"
-            INSERT INTO Articles_Paragraphs
-            (Translation_ID, Paragraph_Number, Content_Type_ID, Paragraph_Raw)
-            VALUES (@TID, @Num, @TypeID, @Raw)", connection);
-
-                insertParagraph.Parameters.AddWithValue("@TID", translationId);
-                insertParagraph.Parameters.AddWithValue("@Num", paragraphNumber++);
-                insertParagraph.Parameters.AddWithValue("@TypeID", typeId);
-                insertParagraph.Parameters.AddWithValue("@Raw", para.Raw);
-
-                insertParagraph.ExecuteNonQuery();
-            }
-
-            return true;
         }
 
         public static int ImportArticle(int articleId, string postContentHtml)
@@ -248,9 +182,46 @@ namespace FFAWMT.Services
 
             Logger.Log($"📄 Inserted new content record: Content_ID = {contentId}");
 
+
+            Logger.Log("🧩 Inserting English paragraphs for new content...");
+
+            var paragraphs = ExtractParagraphs(postContentHtml);
+
+            var insertEnglishTranslation = new SqlCommand(@"
+    INSERT INTO Articles_Translations (Content_ID, Language_ID)
+    OUTPUT INSERTED.Translation_ID
+    VALUES (@ContentID, 1)", connection);
+            insertEnglishTranslation.Parameters.AddWithValue("@ContentID", contentId);
+            int translationId = (int)insertEnglishTranslation.ExecuteScalar();
+
+            int paragraphNumber = 1;
+            foreach (var para in paragraphs)
+            {
+                string trimmedText = para.TextOnly.Trim();
+                int typeId = para.TypeID;
+
+                if (Regex.IsMatch(trimmedText, "^[\"\'‘’“”]"))
+                    typeId = GetTypeIdByName("Quote");
+
+                var insertParagraph = new SqlCommand(@"
+        INSERT INTO Articles_Paragraphs
+        (Translation_ID, Paragraph_Number, Content_Type_ID, Paragraph_Raw)
+        VALUES (@TID, @Num, @TypeID, @Raw)", connection);
+
+                insertParagraph.Parameters.AddWithValue("@TID", translationId);
+                insertParagraph.Parameters.AddWithValue("@Num", paragraphNumber++);
+                insertParagraph.Parameters.AddWithValue("@TypeID", typeId);
+                insertParagraph.Parameters.AddWithValue("@Raw", para.Raw);
+
+                insertParagraph.ExecuteNonQuery();
+            }
+
+            Logger.Log("📄 Inserted English paragraphs for new content...");
+
+
             // 2. Load all active languages
             var languages = new List<int>();
-            var getLanguagesCmd = new SqlCommand("SELECT Language_ID FROM Languages WHERE Active = 1", connection);
+            var getLanguagesCmd = new SqlCommand("SELECT Language_ID FROM Languages WHERE Active = 1 AND Language_ID IN (1)", connection); // TODO Modify to allow <> English
             using (var reader = getLanguagesCmd.ExecuteReader())
             {
                 while (reader.Read())
@@ -273,8 +244,8 @@ namespace FFAWMT.Services
                 if (existing == 0)
                 {
                     var insertTranslationCmd = new SqlCommand(@"
-                INSERT INTO Articles_Translations (Content_ID, Language_ID, Paragraph_Count)
-                VALUES (@ContentID, @LangID, 0)", connection);
+                INSERT INTO Articles_Translations (Content_ID, Language_ID)
+                VALUES (@ContentID, @LangID)", connection);
 
                     insertTranslationCmd.Parameters.AddWithValue("@ContentID", contentId);
                     insertTranslationCmd.Parameters.AddWithValue("@LangID", languageId);
@@ -297,7 +268,7 @@ namespace FFAWMT.Services
 
         public static int UpdateEnglishTitlesInArticlesTranslations()
         {
-            Logger.Log("Updating English titles in Articles_Translations...");
+            //Logger.Log("Updating English titles in Articles_Translations...");
 
             using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
             {
@@ -311,7 +282,7 @@ namespace FFAWMT.Services
                     WHERE t.Language_ID = 1 AND (t.Translated_Title IS NULL OR t.Translated_Title = '');", connection);
                 int rows = command.ExecuteNonQuery();
 
-                Logger.Log($"✔️ Updated {rows} English titles in Articles_Translations...");
+                Logger.Log($"Updated {rows} English titles in Articles_Translations...");
 
                 return rows;
             }
@@ -337,11 +308,13 @@ namespace FFAWMT.Services
                         WHERE t2.Language_ID = 1
                         GROUP BY p.Translation_ID
                     ) p ON t.Translation_ID = p.Translation_ID
-                    WHERE t.Language_ID = 1", connection);
+                    WHERE t.Language_ID = 1 AND ISNULL(t.Paragraph_Count, -1) <> p.ParaCount;", connection);
 
                 int updatedTranslations = cmd1.ExecuteNonQuery();
                 Logger.Log($"✔️ Updated paragraph counts for {updatedTranslations} English translations.");
                 totalUpdated += updatedTranslations;
+
+                Logger.Log($"Updated {totalUpdated} English paragraph counts in Articles_Translations...");
 
                 return totalUpdated;
             }
@@ -349,20 +322,27 @@ namespace FFAWMT.Services
 
         public static int UpdateCleanAndTextForSeparatorLines()
         {
-            Logger.Log("Updating Paragraph_Clean and Paragraph_Text for Separator Lines in Articles_Paragraphs...");
+            //Logger.Log("Updating Paragraph_Clean and Paragraph_Text for Separator Lines in Articles_Paragraphs.");
 
             using (var connection = new SqlConnection(AppConfig.Current.SqlConnectionString))
             {
                 connection.Open();
                 var command = new SqlCommand(@"
-                    UPDATE Articles_Paragraphs
-                    SET Paragraph_Clean = '~~~', Paragraph_Text = '~~~'
-                    WHERE LTRIM(RTRIM(Paragraph_Raw)) LIKE '%~~~%'
-                    ", connection);
+                    UPDATE p
+                    SET 
+                        p.Paragraph_Clean = '',
+                        p.Paragraph_Text = '',
+                        p.Content_Type_ID = t.Type_ID
+                    FROM Articles_Paragraphs p
+                    JOIN Types t ON t.Type_Name = 'Separator'
+                    WHERE 
+                        LTRIM(RTRIM(p.Paragraph_Raw)) LIKE '%~~~%' 
+                        AND p.Paragraph_Clean IS NULL 
+                        AND p.Paragraph_Text IS NULL;", connection);
 
                 int rows = command.ExecuteNonQuery();
 
-                Logger.Log($"✔️ Updated {rows} Paragraph_Clean and Paragraph_Text for Separator Lines in Articles_Paragraphs.");
+                Logger.Log($"Updated {rows} Paragraph_Clean and Paragraph_Text for Separator Lines in Articles_Paragraphs.");
 
                 return rows;
             }
@@ -370,7 +350,7 @@ namespace FFAWMT.Services
 
         public static int UpdateEnglishSeparatorParagraphNumber()
         {
-            Logger.Log("Updating English separator paragraph number positions (~~~)...");
+            //Logger.Log("Updating English separator paragraph number positions (~~~)...");
 
             using (var connection1 = new SqlConnection(AppConfig.Current.SqlConnectionString))
             {
@@ -389,11 +369,11 @@ namespace FFAWMT.Services
                           AND LTRIM(RTRIM(p.Paragraph_Raw)) LIKE '%~~~%'
                         GROUP BY p.Translation_ID
                     ) m ON t.Translation_ID = m.Translation_ID
-                    WHERE t.Language_ID = 1;", connection1);
+                    WHERE t.Language_ID = 1 AND t.Separator_Paragraph_Number IS NULL;", connection1);
 
                 int rows = command1.ExecuteNonQuery();
 
-                Logger.Log($"✔️ Updated {rows} English separator paragraph number positions (~~~).");
+                Logger.Log($"Updated {rows} English separator paragraph number positions (~~~).");
 
                 return rows;
             }

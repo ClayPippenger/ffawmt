@@ -11,9 +11,7 @@
         private System.Windows.Forms.FlowLayoutPanel panelButtons;
 
         private System.Windows.Forms.Button btnSyncWordPress;
-        private System.Windows.Forms.Button btnImportParagraphs;
         private System.Windows.Forms.Button btnCleanParagraphs;
-        private System.Windows.Forms.Button btnFullReset;
         private System.Windows.Forms.Button btnCreateMp3;
         private System.Windows.Forms.Button btnExit;
 
@@ -34,9 +32,7 @@
             txtConsole = new System.Windows.Forms.TextBox();
             panelButtons = new System.Windows.Forms.FlowLayoutPanel();
             btnSyncWordPress = new System.Windows.Forms.Button();
-            btnImportParagraphs = new System.Windows.Forms.Button();
             btnCleanParagraphs = new System.Windows.Forms.Button();
-            btnFullReset = new System.Windows.Forms.Button();
             btnCreateMp3 = new System.Windows.Forms.Button();
             btnExit = new System.Windows.Forms.Button();
             panelButtons.SuspendLayout();
@@ -61,9 +57,7 @@
             // 
             panelButtons.AutoSize = true;
             panelButtons.Controls.Add(btnSyncWordPress);
-            panelButtons.Controls.Add(btnImportParagraphs);
             panelButtons.Controls.Add(btnCleanParagraphs);
-            panelButtons.Controls.Add(btnFullReset);
             panelButtons.Controls.Add(btnCreateMp3);
             panelButtons.Controls.Add(btnExit);
             panelButtons.Dock = System.Windows.Forms.DockStyle.Top;
@@ -83,36 +77,18 @@
             btnSyncWordPress.Text = "Import WordPress Metadata";
             btnSyncWordPress.Click += btnSyncWordPress_Click;
             // 
-            // btnImportParagraphs
-            // 
-            btnImportParagraphs.Location = new System.Drawing.Point(178, 8);
-            btnImportParagraphs.Name = "btnImportParagraphs";
-            btnImportParagraphs.Size = new System.Drawing.Size(185, 23);
-            btnImportParagraphs.TabIndex = 1;
-            btnImportParagraphs.Text = "Breakout HTML Into Paragraphs";
-            btnImportParagraphs.Click += btnImportParagraphs_Click;
-            // 
             // btnCleanParagraphs
             // 
-            btnCleanParagraphs.Location = new System.Drawing.Point(369, 8);
+            btnCleanParagraphs.Location = new System.Drawing.Point(178, 8);
             btnCleanParagraphs.Name = "btnCleanParagraphs";
             btnCleanParagraphs.Size = new System.Drawing.Size(178, 23);
             btnCleanParagraphs.TabIndex = 2;
             btnCleanParagraphs.Text = "Process Paragraph Clean Rules";
             btnCleanParagraphs.Click += btnCleanParagraphs_Click;
             // 
-            // btnFullReset
-            // 
-            btnFullReset.Location = new System.Drawing.Point(553, 8);
-            btnFullReset.Name = "btnFullReset";
-            btnFullReset.Size = new System.Drawing.Size(179, 23);
-            btnFullReset.TabIndex = 3;
-            btnFullReset.Text = "Run first 3 steps (old 1→2→C)";
-            btnFullReset.Click += btnFullReset_Click;
-            // 
             // btnCreateMp3
             // 
-            btnCreateMp3.Location = new System.Drawing.Point(738, 8);
+            btnCreateMp3.Location = new System.Drawing.Point(362, 8);
             btnCreateMp3.Name = "btnCreateMp3";
             btnCreateMp3.Size = new System.Drawing.Size(124, 23);
             btnCreateMp3.TabIndex = 4;
@@ -121,7 +97,7 @@
             // 
             // btnExit
             // 
-            btnExit.Location = new System.Drawing.Point(868, 8);
+            btnExit.Location = new System.Drawing.Point(492, 8);
             btnExit.Name = "btnExit";
             btnExit.Size = new System.Drawing.Size(75, 23);
             btnExit.TabIndex = 5;

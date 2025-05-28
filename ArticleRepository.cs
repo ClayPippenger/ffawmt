@@ -2,6 +2,7 @@
 using Microsoft.Data.SqlClient;
 using System.Linq;
 using FFAWMT.Models;
+using FFAWMT.Services;
 
 namespace FFAWMT.Data
 {
@@ -55,7 +56,7 @@ namespace FFAWMT.Data
                                 updateCmd.Parameters.AddWithValue("@ArticleID", articleId);
 
                                 updateCmd.ExecuteNonQuery();
-                                Logger.Log($"Updated article: {slug}");
+                                Logger.Log($"Updated database WordPress information for: {slug}");
 
 
                                 // Ensure Type 'WordPress' exists and get its ID
@@ -77,19 +78,7 @@ namespace FFAWMT.Data
                                     contentTypeId = (int)insertTypeCmd.ExecuteScalar();
                                 }
 
-                                // Insert new content
-                                var insertCmd = new SqlCommand(@"
-                                    INSERT INTO Articles_Contents (Article_ID, Content_Type_ID, Post_Content, WordPress_Last_Modified)
-                                    VALUES (@ArticleID, @ContentTypeID, @PostContent, @Modified)", connection);
-
-                                insertCmd.Parameters.AddWithValue("@ArticleID", articleId);
-                                insertCmd.Parameters.AddWithValue("@ContentTypeID", contentTypeId);
-                                insertCmd.Parameters.AddWithValue("@PostContent", post.content?.rendered ?? "");
-                                insertCmd.Parameters.AddWithValue("@Modified", post.modified);
-
-                                insertCmd.ExecuteNonQuery();
-                                Logger.Log($"Updated article contents: {slug}");
-
+                                ParagraphImporter.ImportArticle(articleId, post.content.rendered);
                             }
                             else
                             {

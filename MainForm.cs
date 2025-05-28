@@ -23,11 +23,11 @@ namespace FFAWMT
             try
             {
                 Logger.Init(AppendLogMessage);
-                Logger.Log("### FFA Website Management Tool ###");
             }
             catch (Exception ex)
             {
-                Logger.Log($"CRITICAL ERROR during startup: {ex.Message}");
+
+                Logger.Log($"ERROR {ex.Message}");
             }
         }
 
@@ -59,132 +59,48 @@ namespace FFAWMT
         {
             try
             {
-                Logger.Log("[Begin] Import WordPress Metadata");
+                Logger.Prefix = "WordPress";
+                Logger.Log("[▶️] Import WordPress Metadata");
                 await WordPressAPIManager.SyncWordPressMetadataAsync();
-                Logger.Log("[Complete] Import WordPress Metadata");
+                Logger.Log("[🛑] Import WordPress Metadata");
+
+                Logger.Prefix = "Internal rules";
+                Logger.Log("[▶️] Run internal rules");
+
+                int updatedSLines = ParagraphImporter.UpdateCleanAndTextForSeparatorLines();
+                if (updatedSLines < 1) Logger.Log("No Separator Lines found.");
+
+                int updatedSeparators = ParagraphImporter.UpdateEnglishSeparatorParagraphNumber();
+                if (updatedSeparators < 1) Logger.Log("No English separator paragraph number positions (~~~) needed updating.");
+
+                int updatedCounts = ParagraphImporter.UpdateEnglishParagraphCountsInArticlesTranslations();
+                if (updatedCounts < 1) Logger.Log("No English paragraph counts in Article_Translations needed updating.");
+
+                //Logger.Log("Updating English titles for Article_Translations...");
+                int updatedTitles = ParagraphImporter.UpdateEnglishTitlesInArticlesTranslations();
+                if (updatedTitles < 1) Logger.Log("No English titles in Articles_Translations needed updating.");
+
+                Logger.Log("[🛑] Run internal rules");
+                Logger.Prefix = "";
             }
             catch (Exception ex)
             {
-                Logger.Log("[ERROR] " + ex.Message);
+                Logger.Log("ERROR " + ex.Message);
             }
         }
-
-        private void btnImportParagraphs_Click(object sender, EventArgs e)
-        {
-            Logger.Log("[Begin] Breakout HTML Into Paragraphs");
-
-            List<int> updatedArticleIds = ParagraphImporter.ImportAll();
-
-            if (updatedArticleIds.Count > 0)
-            {
-                Logger.Log($"✔️ Paragraphs updated for {updatedArticleIds.Count} article(s).");
-            }
-            else
-            {
-                Logger.Log("No articles needed re-importing. Skipping post-import updates.");
-            }
-
-            Logger.Log("Running Base Rules...");
-
-            int updatedSLines = ParagraphImporter.UpdateCleanAndTextForSeparatorLines();
-            if (updatedSLines < 1) Logger.Log("✔️ No Separator Lines found.");
-
-            Logger.Log("Updating English separator paragraph number positions (~~~)...");
-            int updatedSeparators = ParagraphImporter.UpdateEnglishSeparatorParagraphNumber();
-            Logger.Log(updatedSeparators > 0
-                ? $"✔️ Updated {updatedSeparators} English separator paragraph number positions (~~~)."
-                : "✔️ No English separator paragraph number positions (~~~) needed updating.");
-
-            Logger.Log("Updating English paragraph counts for Article_Translations...");
-            int updatedCounts = ParagraphImporter.UpdateEnglishParagraphCountsInArticlesTranslations();
-            Logger.Log(updatedCounts > 0
-                ? $"✔️ Updated {updatedCounts} English paragraph counts for Article_Translations."
-                : "✔️ No English paragraph counts for Article_Translations needed updating.");
-
-            Logger.Log("Updating English titles for Article_Translations...");
-            int updatedTitles = ParagraphImporter.UpdateEnglishTitlesInArticlesTranslations();
-            Logger.Log(updatedTitles > 0
-                ? $"✔️ Updated {updatedTitles} English titles for Article_Translations."
-                : "✔️ No English titles in Articles_Translations needed updating.");
-
-            Logger.Log("[Complete] Breakout HTML Into Paragraphs");
-        }
-
 
         private void btnCleanParagraphs_Click(object sender, EventArgs e)
         {
             try
             {
-                Logger.Log("[Begin] Process Paragraph Clean Rules");
+                Logger.Prefix = "Paragraph_Cleaning_Rules";
+                Logger.Log("[▶️] Process Paragraph Cleaning Rules");
                 ParagraphCleaner.Run();
-                Logger.Log("[Complete] Process Paragraph Clean Rules");
+                Logger.Log("[🛑] Process Paragraph Cleaning Rules");
             }
             catch (Exception ex)
             {
-                Logger.Log("[ERROR] " + ex.Message);
-            }
-        }
-
-        private async void btnFullReset_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                Logger.Log("[Begin] FIRST 3 STEPS");
-
-                // 1
-                Logger.Log("[Begin] Import WordPress Metadata");
-                await WordPressAPIManager.SyncWordPressMetadataAsync();
-                Logger.Log("[Complete] Import WordPress Metadata");
-
-                // 2
-                Logger.Log("[Begin] Breakout HTML Into Paragraphs");
-
-                List<int> updatedArticleIds = ParagraphImporter.ImportAll();
-
-                if (updatedArticleIds.Count > 0)
-                {
-                    Logger.Log($"✔️ Paragraphs updated for {updatedArticleIds.Count} article(s).");
-                }
-                else
-                {
-                    Logger.Log("No articles needed re-importing. Skipping post-import updates.");
-                }
-
-                Logger.Log("Running Base Rules...");
-
-                int updatedSLines = ParagraphImporter.UpdateCleanAndTextForSeparatorLines();
-                if (updatedSLines < 1) Logger.Log("✔️ No Separator Lines found.");
-
-                Logger.Log("Updating English separator paragraph number positions (~~~)...");
-                int updatedSeparators = ParagraphImporter.UpdateEnglishSeparatorParagraphNumber();
-                Logger.Log(updatedSeparators > 0
-                    ? $"✔️ Updated {updatedSeparators} English separator paragraph number positions (~~~)."
-                    : "✔️ No English separator paragraph number positions (~~~) needed updating.");
-
-                Logger.Log("Updating English paragraph counts for Article_Translations...");
-                int updatedCounts = ParagraphImporter.UpdateEnglishParagraphCountsInArticlesTranslations();
-                Logger.Log(updatedCounts > 0
-                    ? $"✔️ Updated {updatedCounts} English paragraph counts for Article_Translations."
-                    : "✔️ No English paragraph counts for Article_Translations needed updating.");
-
-                Logger.Log("Updating English titles for Article_Translations...");
-                int updatedTitles = ParagraphImporter.UpdateEnglishTitlesInArticlesTranslations();
-                Logger.Log(updatedTitles > 0
-                    ? $"✔️ Updated {updatedTitles} English titles for Article_Translations."
-                    : "✔️ No English titles in Articles_Translations needed updating.");
-                
-                Logger.Log("[Complete] Breakout HTML Into Paragraphs");
-
-                // C
-                Logger.Log("[Begin] Process Paragraph Clean Rules");
-                ParagraphCleaner.Run();
-                Logger.Log("[Complete] Process Paragraph Clean Rules");
-
-                Logger.Log("[Complete] FIRST 3 STEPS");
-            }
-            catch (Exception ex)
-            {
-                Logger.Log("[ERROR] " + ex.Message);
+                Logger.Log("ERROR " + ex.Message);
             }
         }
 
@@ -198,7 +114,7 @@ namespace FFAWMT
             }
             catch (Exception ex)
             {
-                Logger.Log("[ERROR] " + ex.Message);
+                Logger.Log("ERROR " + ex.Message);
             }
         }
 
@@ -211,7 +127,7 @@ namespace FFAWMT
             }
             catch (Exception ex)
             {
-                Logger.Log("[ERROR] " + ex.Message);
+                Logger.Log("ERROR " + ex.Message);
             }
         }
 
@@ -240,5 +156,5 @@ namespace FFAWMT
                 _output.Invoke((MethodInvoker)(() => _output.AppendText(value + Environment.NewLine)));
             }
         }
-    }
+   }
 }

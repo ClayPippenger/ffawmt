@@ -180,8 +180,6 @@ namespace FFAWMT.Services
                             }
                         }
                     }
-
-                    // no break; rules are chained
                 }
 
                 updates.Add((id, raw, cleaned, textOnly, typeId));
@@ -207,7 +205,7 @@ namespace FFAWMT.Services
             }
 
             Logger.Log("🔍 Match summary for cleaning rules:");
-            foreach (var kvp in ruleHitCounts.OrderBy(r => r.Key))
+            foreach (var kvp in ruleHitCounts)//.OrderBy(r => r.Key))
             {
                 var ruleName = kvp.Key;
                 var matchCount = kvp.Value;
@@ -279,7 +277,7 @@ namespace FFAWMT.Services
             using var cmd = new SqlCommand(@"
                 SELECT Rule_Name, Match_Type, Match_Value,
                        Clean_Output, Text_Output, Content_Type_Name,
-                       Transform_Type, Priority, Allow_Chain, Log_Only
+                       Transform_Type, Priority
                 FROM Paragraph_Cleaning_Rules
                 WHERE Active = 1
                 ORDER BY Priority, Rule_ID", connection);
@@ -296,9 +294,7 @@ namespace FFAWMT.Services
                     TextOutput = reader.IsDBNull(4) ? null : reader.GetString(4),
                     ContentTypeName = reader.IsDBNull(5) ? null : reader.GetString(5),
                     TransformType = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    Priority = reader.GetInt32(7),
-                    AllowChain = reader.GetBoolean(8),
-                    LogOnly = reader.GetBoolean(9)
+                    Priority = reader.GetInt32(7)
                 });
             }
             return rules;
@@ -314,8 +310,6 @@ namespace FFAWMT.Services
             public string ContentTypeName { get; set; }
             public string TransformType { get; set; }
             public int Priority { get; set; }
-            public bool AllowChain { get; set; }
-            public bool LogOnly { get; set; }
         }
     }
 }

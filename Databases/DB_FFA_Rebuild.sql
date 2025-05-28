@@ -90,7 +90,6 @@ CREATE TABLE [dbo].[Articles_Contents] (
 	[Article_ID] INT NOT NULL,
 	[Content_Type_ID] INT NOT NULL DEFAULT 1,
     [Post_Content] NVARCHAR(MAX) NOT NULL,
-    [WordPress_Last_Modified] DATETIME NULL,
 	[Active] BIT NOT NULL DEFAULT 1,
     [Created_Date] DATETIME NOT NULL DEFAULT SYSUTCDATETIME(),
     [Last_Modified] DATETIME NULL,
@@ -308,27 +307,25 @@ CREATE TABLE Paragraph_Cleaning_Rules (
     Content_Type_Name NVARCHAR(100) NULL,
     Transform_Type NVARCHAR(50) NULL,
     Active BIT NOT NULL DEFAULT 1,
-    Priority INT NOT NULL DEFAULT 100,
-    Allow_Chain BIT NOT NULL DEFAULT 0,
-    Log_Only BIT NOT NULL DEFAULT 0
+    Priority INT NOT NULL DEFAULT 100
 );
 GO
 
 INSERT INTO Paragraph_Cleaning_Rules (
     Rule_Name, Match_Type, Match_Value,
     Clean_Output, Text_Output, Content_Type_Name,
-    Transform_Type, Active, Priority, Allow_Chain, Log_Only
+    Transform_Type, Active, Priority
 )
 VALUES
-('Audio Download Link',         'Regex',    '<a[^>]+href\s*=\s*[''"][^''"]+\.mp3[''"]',              NULL, NULL, 'Header Audio',           NULL,         1, 100, 0, 0),
-('Spacing Break',               'Regex',    '<p[^>]*>(&nbsp;|\\s)*</p>',                             NULL, NULL, 'Break',                  NULL,         1, 100, 0, 0),
-('Indented Quotation (40px)',   'Regex',    'padding-left:\s*40px',                                   NULL, NULL, 'Indented Quotation',     'strippatag', 1, 100, 0, 0),
-('Key Takeaways (H6)',          'Regex',    '^<h6>Key Takeaways</h6>$',                                'Key Takeaways', 'Key Takeaways', 'Key Takeaways', NULL, 1, 5, 0, 0),
-('General H6 Title',            'Regex',    '<h6>.*?</h6>',                                            NULL, NULL, 'Title',                 'strippatag', 1, 99, 0, 0),
-('Decode All HTML Entities',    'Regex',    '&#[0-9]+;',                                               NULL, NULL, NULL,                   'decodehtml', 1, 20, 1, 0),
-('Sub Title (H6)',              'Regex',    '<h6>.*?</h6>',                                            NULL, NULL, 'Sub Title',             'strippatag', 1, 100, 0, 0),
-('Default Paragraph – Promote to Content', 'Regex', '^<p.*?>.*?</p>$',                                 NULL, NULL, 'Content',               'strippatag', 1, 600, 0, 0),
-('Strip LI Tags – For List Levels', 'Regex', '^<li>.*?</li>$',                                         NULL, NULL, NULL,                   'strippatag', 1, 300, 0, 0);
+('Audio Download Link',         'Regex',    '<a[^>]+href\s*=\s*[''"][^''"]+\.mp3[''"]',              NULL, NULL, 'Header Audio',           NULL,         1, 100),
+('Spacing Break',               'Regex',    '<p[^>]*>(&nbsp;|\\s)*</p>',                             '', '', 'Break',                  NULL,         1, 100),
+('Indented Quotation (40px)',   'Regex',    'padding-left:\s*40px',                                   NULL, NULL, 'Indented Quotation',     'strippatag', 1, 100),
+('Key Takeaways (H6)',          'Regex',    '^<h6>Key Takeaways</h6>$',                                'Key Takeaways', 'Key Takeaways', 'Key Takeaways', NULL, 1, 5),
+('General H6 Title',            'Regex',    '<h6>.*?</h6>',                                            NULL, NULL, 'Title',                 'strippatag', 1, 99),
+('Decode All HTML Entities',    'Regex',    '&#[0-9]+;',                                               NULL, NULL, NULL,                   'decodehtml', 1, 20),
+('Sub Title (H6)',              'Regex',    '<h6>.*?</h6>',                                            NULL, NULL, 'Sub Title',             'strippatag', 1, 100),
+('Default Paragraph – Promote to Content', 'Regex', '^<p.*?>.*?</p>$',                                 NULL, NULL, 'Content',               'strippatag', 1, 600),
+('Strip LI Tags – For List Levels', 'Regex', '^<li>.*?</li>$',                                         NULL, NULL, NULL,                   'strippatag', 1, 300);
 GO
 
 CREATE TABLE Articles_Paragraphs_Clean_Log (
@@ -2165,25 +2162,6 @@ EXEC sys.sp_addextendedproperty
   @level0type = N'SCHEMA', @level0name = N'dbo',
   @level1type = N'TABLE', @level1name = N'Articles_Contents',
   @level2type = N'COLUMN', @level2name = N'Content_Type_ID';
-GO
-
-BEGIN TRY
-    EXEC sys.sp_dropextendedproperty 
-        @name = N'MS_Description',
-        @level0type = N'SCHEMA', @level0name = N'dbo',
-        @level1type = N'TABLE', @level1name = N'Articles_Contents',
-        @level2type = N'COLUMN', @level2name = N'WordPress_Last_Modified';
-END TRY
-BEGIN CATCH
-END CATCH;
-GO
-
-EXEC sys.sp_addextendedproperty
-  @name = N'MS_Description',
-  @value = N'Description for column WordPress_Last_Modified in Articles_Contents.',
-  @level0type = N'SCHEMA', @level0name = N'dbo',
-  @level1type = N'TABLE', @level1name = N'Articles_Contents',
-  @level2type = N'COLUMN', @level2name = N'WordPress_Last_Modified';
 GO
 
 BEGIN TRY
